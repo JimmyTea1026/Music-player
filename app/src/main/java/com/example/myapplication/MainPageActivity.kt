@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 @Composable
-fun SelectPage(
+fun MainPage(
     modifier: Modifier = Modifier
 ){
     Column(
@@ -135,5 +135,5 @@ fun SearchBarPreview(){
 @Preview(showBackground = true)
 @Composable
 fun SelectPagePreview(){
-    SelectPage()
+    MainPage()
 }

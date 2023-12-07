@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
                         navigateToSelectPage.value = true
                     }
                 }
-                if(navigateToSelectPage.value) SelectPage() else navPage()
+                if(navigateToSelectPage.value) MainPage() else navPage()
             }
         }
     }
