@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +22,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 @Composable
@@ -78,7 +80,7 @@ fun SongList(
     LazyColumn(modifier = modifier.padding(vertical = 4.dp)){
         items(names){ name ->
             Surface(
-                color = MaterialTheme.colorScheme.primary,
+                color = Color.Blue.copy(alpha = 0.2f),
                 modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
             ) {
                 Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
@@ -103,14 +105,21 @@ fun MenuBar(
         Button(
             onClick = { /*TODO*/ },
             modifier = Modifier
-                .weight(1f)
-
+                .weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.DarkGray,
+                contentColor = Color.White
+            ),
         ) {
             Text("Song List")
         }
         Button(onClick = { /*TODO*/ },
             modifier = Modifier
-                .weight(1f)
+                .weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.DarkGray,
+                contentColor = Color.White
+            ),
         ) {
             Text("Now Playing")
         }
