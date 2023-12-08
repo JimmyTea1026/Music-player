@@ -3,6 +3,8 @@ package com.example.myapplication
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,14 +43,23 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 val coroutineScope = rememberCoroutineScope()
-                var navigateToSelectPage = remember{ mutableStateOf(false) }
+                val switchToMainPage = remember{ mutableStateOf(false) }
+
                 LaunchedEffect(Unit){
                     coroutineScope.launch {
-                        delay(1500)
-                        navigateToSelectPage.value = true
+                        delay(2000)
+                        switchToMainPage.value = true
                     }
                 }
-                if(navigateToSelectPage.value) MainPage() else navPage()
+                Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 500),
+                    label = "navToMain"
+                )
+                { switchPage ->
+                    when(switchPage){
+                        true -> mainPage()
+                        false -> navPage()
+                    }
+                }
             }
         }
     }
@@ -58,7 +69,7 @@ enum class Page{
     SONG, PLAY
 }
 @Composable
-fun MainPage(
+fun mainPage(
     modifier: Modifier = Modifier
 ) {
 
@@ -84,7 +95,6 @@ fun MainPage(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-//                .background(color = Color.LightGray)
         ){
             MenuBar(
                 songListClicked = {curPage = Page.SONG},
@@ -152,7 +162,7 @@ fun navPage(){
 @Composable
 fun MaingPagePreview() {
     MyApplicationTheme {
-        MainPage()
+        mainPage()
     }
 }
 
