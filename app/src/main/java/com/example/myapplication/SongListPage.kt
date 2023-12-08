@@ -29,6 +29,18 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 import java.io.File
 
 class SongListPage{
+    private val songList : MutableList<Song> = mutableListOf<Song>()
+    init{
+        initSongList()
+    }
+    fun initSongList(){
+        val path = "D:\\Compal\\Code\\MusicPlayer\\song"
+        val dirs = File(path).listFiles()
+        dirs.forEach{ dir ->
+            val newSong : Song = Song(dir)
+            songList.add(newSong)
+        }
+    }
     @Composable
     fun showPage(
         modifier: Modifier = Modifier
