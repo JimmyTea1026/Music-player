@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
                 var navigateToSelectPage = remember{ mutableStateOf(false) }
                 LaunchedEffect(Unit){
                     coroutineScope.launch {
-                        delay(3000)
+                        delay(1000)
                         navigateToSelectPage.value = true
                     }
                 }
