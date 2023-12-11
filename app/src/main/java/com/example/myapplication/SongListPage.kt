@@ -2,7 +2,10 @@ package com.example.myapplication
 
 import android.content.Context
 import android.media.MediaMetadataRetriever
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,47 +24,54 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import java.io.File
 
-class SongListPage(context : Context){
-//    val assetManager = context.assets
-//    private val songList : MutableList<Song> = mutableListOf<Song>()
+class SongListPage(context : Context?){
+    private val songList : MutableList<Song> = mutableListOf<Song>()
+    init{
+        val assetManager = context!!.assets
+        val path = "music"
+        val assetList = assetManager.list(path)
+        if (assetList != null) {
+            for(artist in assetList){
+                var artist = artist
+                var coverPath = ""
+                var songPath = ""
+                var songTitle = ""
 
-//    init{
-//        val path = "music"
-//        val assetList = assetManager.list(path)
-//        if (assetList != null) {
-//            for(title in assetList){
-//                var songTitle = title
-//                var coverPath = ""
-//                var songPath = ""
-//                var artist = ""
-//                val fullPath = if (path.isNotEmpty()) "$path/$title" else ""
-//                val files = assetManager.list(fullPath)
-//                if(files?.isNotEmpty() == true){
-//                    for(file in files){
-//                        val filePath = "$fullPath/$file"
-//                        if(filePath.endsWith(".png")) coverPath=filePath
-//                        else if(filePath.endsWith(".mp3")) {
-//                            songPath=filePath
-//                            val retriever = MediaMetadataRetriever()
-//                            retriever.setDataSource(filePath)
-//                            artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
-//                                .toString()
-//                            retriever.release()
-//                        }
-//                    }
-//                }
-//
-//                val song : Song = Song()
-//                song.setInformation(songTitle=songTitle, coverPath=coverPath, songPath=songPath, artist=artist)
-//                songList.add(song)
-//            }
-//        }
-//    }
+                val songs = assetManager.list("$path/$artist")
+                if (songs != null) {
+                    for (title in songs) {
+                        songTitle = title
+                        val files = assetManager.list("$path/$artist/$title")
+                        if (files != null) {
+                            for (file in files) {
+                                val filePath = "$path/$artist/$title/$file"
+                                if (filePath.endsWith(".png")) coverPath = filePath
+                                else if (filePath.endsWith(".mp3")) songPath = filePath
+                            }
+                        }
+                    }
+                    val song: Song = Song()
+                    song.setInformation(
+                        songTitle = songTitle,
+                        coverPath = coverPath,
+                        songPath = songPath,
+                        artist = artist
+                    )
+                    songList.add(song)
+                }
+            }
+        }
+    }
 
     @Composable
     fun showPage(
@@ -111,41 +121,58 @@ class SongListPage(context : Context){
     fun songList(
         modifier: Modifier = Modifier,
     ){
-        var songs = emptyList<Song>()
-        val path =  "D:/Compal/Code/MusicPlayer/song/"
-        getSongs(path, songs)
-        LazyColumn(modifier = modifier.padding(vertical = 4.dp)){
-            items(songs){ song ->
+        val list = (1..100).toList()
+        LazyColumn(
+            modifier = modifier.padding(vertical = 4.dp),
+        ){
+            items(songList){ song ->
                 Surface(
-                    color = Color.Blue.copy(alpha = 0.2f),
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+                    color = Color.DarkGray.copy(alpha = 0.1f),
+                    modifier = Modifier
+                        .padding(vertical = 4.dp, horizontal = 8.dp)
+                        .height(75.dp)
                 ) {
-                    Column(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp)) {
-                        Text(text = "Hello, ")
+                    Row (
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 10.dp, horizontal = 10.dp),
 
+                    ){
+                        Image(painter = painterResource(id = R.drawable.cover), contentDescription = "")
+                        Box(modifier = Modifier
+                            .weight(1.5f)
+                            .fillMaxSize()
+                            .padding(start = 15.dp),
+                            contentAlignment = Alignment.Center
+                        ){
+                            Text(text = song.getTitle(),
+                                textAlign = TextAlign.Center,
+                                style = TextStyle(fontSize = 25.sp),
+//                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        Box(modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize(),
+                            contentAlignment = Alignment.BottomEnd
+                        ){
+                            Text(text = song.getArtist(),
+                                textAlign = TextAlign.Right,
+                                style = TextStyle(fontSize = 13.sp),
+//                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
                 }
             }
         }
     }
-
-    fun getSongs(path: String, songs:List<Song>){
-        val folders = File(path).listFiles()
-        if (folders != null) {
-            for (folder in folders) {
-                var folders = folder.listFiles()
-            }
-        }
-    }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun songPagePreview(){
-//    MyApplicationTheme {
-//        val sp = SongListPage()
-//        sp.showPage()
-//    }
-//}
+@Preview(showBackground = true)
+@Composable
+fun songPagePreview(){
+    MyApplicationTheme {
+        SongListPage(null).songList()
+    }
+}

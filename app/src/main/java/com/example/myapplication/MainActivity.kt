@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-                test(this)
+//                test(this)
 
                 val coroutineScope = rememberCoroutineScope()
                 val switchToMainPage = remember{ mutableStateOf(false) }
@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit){
                     coroutineScope.launch {
                         delay(1000)
-                        switchToMainPage.value = false
+                        switchToMainPage.value = true
                     }
                 }
                 Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 500),

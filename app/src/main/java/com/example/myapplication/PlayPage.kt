@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 
-class PlayPage(context:Context){
+class PlayPage(context:Context?){
 //    val mediaPlayer = MediaPlayer()
 //    var currentSong : Song = Song()
 //    val assetManager = context.assets
@@ -211,11 +211,11 @@ class PlayPage(context:Context){
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun playPagePreview(){
-//    MyApplicationTheme {
-//        val pp = PlayPage(null)
-//        pp.showPage()
-//    }
-//}
+@Preview(showBackground = true)
+@Composable
+fun playPagePreview(){
+    MyApplicationTheme {
+        val pp = PlayPage(null)
+        pp.showPage()
+    }
+}
