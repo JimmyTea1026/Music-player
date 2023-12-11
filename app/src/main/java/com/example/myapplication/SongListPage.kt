@@ -1,6 +1,7 @@
 package com.example.myapplication
 
-import android.util.Log
+import android.content.Context
+import android.media.MediaMetadataRetriever
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,27 +21,48 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import java.io.File
 
-class SongListPage{
-    private val songList : MutableList<Song> = mutableListOf<Song>()
-    init{
-        initSongList()
-    }
-    fun initSongList(){
-        val path = "D:\\Compal\\Code\\MusicPlayer\\song"
-        val dirs = File(path).listFiles()
-        dirs.forEach{ dir ->
-            val newSong : Song = Song(dir)
-            songList.add(newSong)
-        }
-    }
+class SongListPage(context : Context){
+//    val assetManager = context.assets
+//    private val songList : MutableList<Song> = mutableListOf<Song>()
+
+//    init{
+//        val path = "music"
+//        val assetList = assetManager.list(path)
+//        if (assetList != null) {
+//            for(title in assetList){
+//                var songTitle = title
+//                var coverPath = ""
+//                var songPath = ""
+//                var artist = ""
+//                val fullPath = if (path.isNotEmpty()) "$path/$title" else ""
+//                val files = assetManager.list(fullPath)
+//                if(files?.isNotEmpty() == true){
+//                    for(file in files){
+//                        val filePath = "$fullPath/$file"
+//                        if(filePath.endsWith(".png")) coverPath=filePath
+//                        else if(filePath.endsWith(".mp3")) {
+//                            songPath=filePath
+//                            val retriever = MediaMetadataRetriever()
+//                            retriever.setDataSource(filePath)
+//                            artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+//                                .toString()
+//                            retriever.release()
+//                        }
+//                    }
+//                }
+//
+//                val song : Song = Song()
+//                song.setInformation(songTitle=songTitle, coverPath=coverPath, songPath=songPath, artist=artist)
+//                songList.add(song)
+//            }
+//        }
+//    }
+
     @Composable
     fun showPage(
         modifier: Modifier = Modifier
@@ -119,11 +141,11 @@ class SongListPage{
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun songPagePreview(){
-    MyApplicationTheme {
-        val sp = SongListPage()
-        sp.showPage()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun songPagePreview(){
+//    MyApplicationTheme {
+//        val sp = SongListPage()
+//        sp.showPage()
+//    }
+//}

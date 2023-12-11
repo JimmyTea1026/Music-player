@@ -1,5 +1,7 @@
 package com.example.myapplication
 
+import android.content.Context
+import android.media.MediaPlayer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,13 +38,23 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 
-class PlayPage(){
-    var currentSong : Song = Song()
+class PlayPage(context:Context){
+//    val mediaPlayer = MediaPlayer()
+//    var currentSong : Song = Song()
+//    val assetManager = context.assets
+//    fun setSong(song: Song){
+//        if(song.getTitle() != currentSong.getTitle()){
+//            currentSong = song
+//            val des = assetManager.openFd(currentSong.getPath())
+//            mediaPlayer.setDataSource(des)
+//            mediaPlayer.prepare()
+//        }
+//    }
     @Composable
     fun showPage(
         modifier: Modifier = Modifier
     ) {
-        var currentSong = remember { mutableStateOf(currentSong) }
+//        var currentSong = remember { mutableStateOf(currentSong) }
         var title = "アイドル"
         var author = "YOASOBI"
         var time = 100
@@ -147,7 +159,7 @@ class PlayPage(){
                         checked = checkedState.value,
                         onCheckedChange = {checkedState.value=it}
                     ) {
-                        val playIcon = painterResource(id = R.drawable.play1)
+                        val playIcon = painterResource(id = R.drawable.play)
                         val pauseIcon = painterResource(id = R.drawable.pause)
                         var icon = if (checkedState.value) playIcon else pauseIcon
                         Icon(
@@ -199,11 +211,11 @@ class PlayPage(){
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun playPagePreview(){
-    MyApplicationTheme {
-        val pp = PlayPage()
-        pp.showPage()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun playPagePreview(){
+//    MyApplicationTheme {
+//        val pp = PlayPage(null)
+//        pp.showPage()
+//    }
+//}
