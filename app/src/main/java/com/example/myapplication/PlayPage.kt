@@ -1,9 +1,10 @@
 package com.example.myapplication
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.media.MediaPlayer
+import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +24,16 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -36,28 +42,40 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
-class PlayPage(context:Context?){
-//    val mediaPlayer = MediaPlayer()
-//    var currentSong : Song = Song()
-//    val assetManager = context.assets
-//    fun setSong(song: Song){
-//        if(song.getTitle() != currentSong.getTitle()){
-//            currentSong = song
-//            val des = assetManager.openFd(currentSong.getPath())
-//            mediaPlayer.setDataSource(des)
-//            mediaPlayer.prepare()
-//        }
-//    }
+class PlayPage(context:Context?, songList: ArrayList<Song>){
+    val assetManager = context!!.assets
+    val songList = songList
+    var currentSong = 0
+    var song = songList[0]
+    val mediaPlayer = MediaPlayer()
+    init{
+        initMediaPlayer()
+    }
+    fun initMediaPlayer(){
+        val des = assetManager.openFd(song.getPath())
+        mediaPlayer.setDataSource(des)
+        mediaPlayer.prepare()
+        mediaPlayer.seekTo(0)
+    }
+    fun setSong(nextSong:Int){
+        if(nextSong != currentSong){
+            currentSong = nextSong
+            song = songList[currentSong]
+            mediaPlayer.release()
+            initMediaPlayer()
+            mediaPlayer.start()
+        }
+    }
+
     @Composable
     fun showPage(
         modifier: Modifier = Modifier
     ) {
-//        var currentSong = remember { mutableStateOf(currentSong) }
-        var title = "アイドル"
-        var author = "YOASOBI"
-        var time = 100
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -88,9 +106,12 @@ class PlayPage(context:Context?){
     fun coverImage(
         modifer : Modifier = Modifier
     ){
+        val coverPath = song.getCoverPath()
+        val cover = BitmapFactory.decodeStream(assetManager.open(coverPath))
+
         Box(modifier = modifer) {
             Image(
-                painter = painterResource(id = R.drawable.cover),
+                bitmap = cover.asImageBitmap(),
                 contentDescription = "Icon",
                 modifier = Modifier
                     .fillMaxSize()
@@ -101,8 +122,8 @@ class PlayPage(context:Context?){
     fun songInformation(
         modifer : Modifier = Modifier
     ){
-        var title = "アイドル"
-        var author = "YOASOBI"
+        var title = song.getTitle()
+        var artist = song.getArtist()
         Box(modifier = modifer){
             Column(modifier = modifer) {
                 Text(
@@ -115,7 +136,7 @@ class PlayPage(context:Context?){
                         .padding(top = 10.dp)
                 )
                 Text(
-                    text = author,
+                    text = artist,
                     style = TextStyle(fontSize = 16.sp),
                     fontWeight = FontWeight.Light,
                     textAlign = TextAlign.Center,
@@ -153,15 +174,24 @@ class PlayPage(context:Context?){
                         )
                     }
 
-                    val checkedState = remember{ mutableStateOf(true) }
+                    val checkedState = remember{ mutableStateOf(false) }
                     IconToggleButton(
                         modifier = Modifier.weight(.1f),
                         checked = checkedState.value,
-                        onCheckedChange = {checkedState.value=it}
+                        onCheckedChange = {
+                                if(checkedState.value) {
+                                    mediaPlayer.pause()
+                                    checkedState.value = false
+                                }
+                                else{
+                                    mediaPlayer.start()
+                                    checkedState.value = true
+                                }
+                            },
                     ) {
                         val playIcon = painterResource(id = R.drawable.play)
                         val pauseIcon = painterResource(id = R.drawable.pause)
-                        var icon = if (checkedState.value) playIcon else pauseIcon
+                        var icon = if (checkedState.value) pauseIcon else playIcon
                         Icon(
                             painter = icon, contentDescription = "Play/Pause",
                             modifier = Modifier.size(iconSize),
@@ -185,37 +215,57 @@ class PlayPage(context:Context?){
     fun progressBar(
         modifer : Modifier = Modifier
     ){
+        var count by remember { mutableStateOf(0) }
+        var curPos by remember { mutableStateOf(0) }
+        val duration = mediaPlayer.duration/1000
+        var isPlaying by remember{ mutableStateOf(mediaPlayer.isPlaying) }
+        LaunchedEffect(isPlaying) {
+            while (true) {
+//                count++
+                curPos = mediaPlayer.currentPosition/1000
+                delay(100)
+            }
+        }
+        val progress = curPos.toFloat()/duration.toFloat()
         Box(modifier = modifer){
             Column() {
                 LinearProgressIndicator(
-                    progress = 0.5f,
+                    progress = progress,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 30.dp)
                 )
-                val minute : Int = 0/60
-                val second : Int = 0%60
-                val str_min : String = "0$minute"
-                val str_sec : String = if(second>10) "$second" else "0$second"
-                Text(
-                    text = "$str_min : $str_sec",
-                    style = TextStyle(fontSize = 12.sp),
-                    textAlign = TextAlign.End,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 5.dp)
-                )
+
+                Row(){
+                    val curMinute : Int = curPos/60
+                    val curSecond : Int = curPos%60
+                    val curStrMin : String = "0$curMinute"
+                    val curStrSec : String = if(curSecond>=10) "$curSecond" else "0$curSecond"
+                    Text(
+                        text = "$curStrMin : $curStrSec",
+                        style = TextStyle(fontSize = 12.sp),
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(end = 15.dp)
+                    )
+
+                    val minute : Int = duration/60
+                    val second : Int = duration%60
+                    val strMin : String = "0$minute"
+                    val strSec : String = if(second>=10) "$second" else "0$second"
+                    Text(
+                        text = "$strMin : $strSec",
+                        style = TextStyle(fontSize = 12.sp),
+                        textAlign = TextAlign.End,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(end = 5.dp)
+                    )
+                }
             }
-
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun playPagePreview(){
-    MyApplicationTheme {
-        val pp = PlayPage(null)
-        pp.showPage()
     }
 }

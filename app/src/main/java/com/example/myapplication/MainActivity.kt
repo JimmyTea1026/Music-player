@@ -119,13 +119,12 @@ class MainActivity : ComponentActivity() {
         modifier: Modifier = Modifier
     ) {
         val curPage = remember { mutableStateOf(Page.SONGLIST) }
-        val curSong = remember { mutableStateOf(-1) }
-        val changeSong:(Int) -> Unit = { songID->
-            curSong.value = songID
+        val playPage = PlayPage(this, songList)
+        val changeSong:(Int) -> Unit = { nextSong->
             curPage.value = Page.PLAY
+            playPage.setSong(nextSong)
         }
         val songPage = SongListPage(this, songList, changeSong)
-        val playPage = PlayPage(this)
 
         Column(
             modifier = Modifier.fillMaxSize()
