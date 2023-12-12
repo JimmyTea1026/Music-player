@@ -3,6 +3,7 @@ package com.example.myapplication
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,48 +36,14 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import java.io.File
 
-class SongListPage(context : Context?){
-    private val songList : MutableList<Song> = mutableListOf<Song>()
-    init{
-        val assetManager = context!!.assets
-        val path = "music"
-        val assetList = assetManager.list(path)
-        if (assetList != null) {
-            for(artist in assetList){
-                var artist = artist
-                var coverPath = ""
-                var songPath = ""
-                var songTitle = ""
-
-                val songs = assetManager.list("$path/$artist")
-                if (songs != null) {
-                    for (title in songs) {
-                        songTitle = title
-                        val files = assetManager.list("$path/$artist/$title")
-                        if (files != null) {
-                            for (file in files) {
-                                val filePath = "$path/$artist/$title/$file"
-                                if (filePath.endsWith(".png")) coverPath = filePath
-                                else if (filePath.endsWith(".mp3")) songPath = filePath
-                            }
-                        }
-                    }
-                    val song: Song = Song()
-                    song.setInformation(
-                        songTitle = songTitle,
-                        coverPath = coverPath,
-                        songPath = songPath,
-                        artist = artist
-                    )
-                    songList.add(song)
-                }
-            }
-        }
-    }
+class SongListPage(context : Context?, songList : ArrayList<Song>, changSong: (Int) -> Unit){
+    val songList = songList
+    val changSong = changSong
 
     @Composable
     fun showPage(
         modifier: Modifier = Modifier
+
     ){
         Column(
             modifier = modifier
@@ -87,7 +55,7 @@ class SongListPage(context : Context?){
                 modifier
                     .fillMaxWidth()
                     .height(80.dp))
-            songList(
+            showSongList(
                 modifier
                     .fillMaxWidth()
                     .weight(1f))
@@ -118,19 +86,23 @@ class SongListPage(context : Context?){
         )
     }
     @Composable
-    fun songList(
+    fun showSongList(
         modifier: Modifier = Modifier,
     ){
         val list = (1..100).toList()
         LazyColumn(
             modifier = modifier.padding(vertical = 4.dp),
         ){
-            items(songList){ song ->
+            items(songList.size){index ->
+                val song = songList[index]
                 Surface(
-                    color = Color.DarkGray.copy(alpha = 0.1f),
+                    color = Color.Blue.copy(alpha = 0.1f),
                     modifier = Modifier
                         .padding(vertical = 4.dp, horizontal = 8.dp)
                         .height(75.dp)
+                        .clickable {
+                            changSong(index)
+                        }
                 ) {
                     Row (
                         modifier = Modifier
@@ -140,9 +112,9 @@ class SongListPage(context : Context?){
                     ){
                         Image(painter = painterResource(id = R.drawable.cover), contentDescription = "")
                         Box(modifier = Modifier
-                            .weight(1.5f)
+                            .weight(2f)
                             .fillMaxSize()
-                            .padding(start = 15.dp),
+                            .padding(start = 35.dp),
                             contentAlignment = Alignment.Center
                         ){
                             Text(text = song.getTitle(),
@@ -159,6 +131,7 @@ class SongListPage(context : Context?){
                             Text(text = song.getArtist(),
                                 textAlign = TextAlign.Right,
                                 style = TextStyle(fontSize = 13.sp),
+                                color = Color.DarkGray.copy(alpha = 0.7f)
 //                                fontWeight = FontWeight.Bold,
                             )
                         }
@@ -173,6 +146,6 @@ class SongListPage(context : Context?){
 @Composable
 fun songPagePreview(){
     MyApplicationTheme {
-        SongListPage(null).songList()
+//        SongListPage(null, "").songList()
     }
 }

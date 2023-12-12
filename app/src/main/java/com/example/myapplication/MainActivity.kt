@@ -3,6 +3,7 @@ package com.example.myapplication
 import android.content.Context
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
@@ -40,40 +41,74 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    var songList = arrayListOf<Song>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-//                test(this)
-
-                val coroutineScope = rememberCoroutineScope()
-                val switchToMainPage = remember{ mutableStateOf(false) }
-
-                LaunchedEffect(Unit){
-                    coroutineScope.launch {
-                        delay(1000)
-                        switchToMainPage.value = true
-                    }
-                }
-                Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 500),
-                    label = "navToMain"
-                )
-                { switchPage ->
-                    when(switchPage){
-                        true -> mainPage()
-                        false -> navPage()
-                    }
-                }
+                songList = initSongList(this)
+                showNavPage()
             }
         }
     }
-    private fun test(context: Context){
-        var media = MediaPlayer()
+    @Composable
+    fun showNavPage(){
+        val coroutineScope = rememberCoroutineScope()
+        val switchToMainPage = remember{ mutableStateOf(false) }
+
+        LaunchedEffect(Unit){
+            coroutineScope.launch {
+                delay(1000)
+                switchToMainPage.value = true
+            }
+        }
+        Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 500),
+            label = "navToMain"
+        )
+        { switchPage ->
+            when(switchPage){
+                true -> mainPage()
+                false -> navPage()
+            }
+        }
+    }
+    fun initSongList(context: Context): ArrayList<Song> {
+        val songList = arrayListOf<Song>()
         val assetManager = context.assets
-        val des = assetManager.openFd("music/アイドル/song.mp3")
-        media.setDataSource(des)
-        media.prepare()
-        media.start()
+        val path = "music"
+        val assetList = assetManager.list(path)
+        if (assetList != null) {
+            for(artist in assetList){
+                var artist = artist
+                var coverPath = ""
+                var songPath = ""
+                var songTitle = ""
+
+                val songs = assetManager.list("$path/$artist")
+                if (songs != null) {
+                    for (title in songs) {
+                        songTitle = title
+                        val files = assetManager.list("$path/$artist/$title")
+                        if (files != null) {
+                            for (file in files) {
+                                val filePath = "$path/$artist/$title/$file"
+                                if (filePath.endsWith(".png")) coverPath = filePath
+                                else if (filePath.endsWith(".mp3")) songPath = filePath
+                            }
+                        }
+                    }
+                    val song: Song = Song()
+                    song.setInformation(
+                        songTitle = songTitle,
+                        coverPath = coverPath,
+                        songPath = songPath,
+                        artist = artist
+                    )
+                    songList += song
+                }
+            }
+        }
+        return songList
     }
 
     enum class Page{
@@ -83,9 +118,13 @@ class MainActivity : ComponentActivity() {
     fun mainPage(
         modifier: Modifier = Modifier
     ) {
-
-        var curPage by remember { mutableStateOf(Page.SONGLIST) }
-        val songPage = SongListPage(this)
+        val curPage = remember { mutableStateOf(Page.SONGLIST) }
+        val curSong = remember { mutableStateOf(-1) }
+        val changeSong:(Int) -> Unit = { songID->
+            curSong.value = songID
+            curPage.value = Page.PLAY
+        }
+        val songPage = SongListPage(this, songList, changeSong)
         val playPage = PlayPage(this)
 
         Column(
@@ -97,10 +136,20 @@ class MainActivity : ComponentActivity() {
                     .fillMaxWidth()
                     .padding(16.dp)
             ){
-                when(curPage){
+//                Crossfade(targetState = curPage.value, animationSpec = tween(durationMillis = 500),
+//                    label = ""
+//                )
+//                { curPage ->
+//                    when(curPage){
+//                        Page.SONGLIST -> mainPage()
+//                        Page.PLAY -> navPage()
+//                    }
+//                }
+                when(curPage.value){
                     Page.SONGLIST -> {songPage.showPage()}
                     Page.PLAY -> {playPage.showPage()}
                 }
+
             }
             Box(
                 modifier = Modifier
@@ -108,9 +157,9 @@ class MainActivity : ComponentActivity() {
                     .height(56.dp)
             ){
                 MenuBar(
-                    songListClicked = {curPage = Page.SONGLIST},
+                    songListClicked = {curPage.value = Page.SONGLIST},
                     playClicked = {
-                        curPage = Page.PLAY
+                        curPage.value = Page.PLAY
                     }
                 )
             }
