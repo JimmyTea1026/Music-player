@@ -25,6 +25,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +51,11 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (
         modifier: Modifier = Modifier
 
     ){
+        val searchSongCandidate = remember{ mutableStateOf(ArrayList<Int>()) }
+        val onSearchBarChanged : (String) -> Unit = {title->
+            searchSongCandidate.value = searchSong(title)
+        }
+
         Column(
             modifier = modifier
                 .fillMaxSize(),
@@ -58,22 +65,42 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (
             searchBar(
                 modifier
                     .fillMaxWidth()
-                    .height(80.dp))
+                    .height(80.dp),
+                onSearchBarChanged
+            )
             showSongList(
                 modifier
                     .fillMaxWidth()
-                    .weight(1f))
+                    .weight(1f),
+                searchSongCandidate.value
+            )
         }
     }
 
+    fun searchSong(searchTitle:String) : ArrayList<Int>{
+        val candidate = arrayListOf<Int>()
+        if (searchTitle=="") return candidate
+        songList.forEachIndexed{index, song ->
+            val songTitle = song.getTitle().lowercase()
+            searchTitle.lowercase()
+            if(songTitle.contains(searchTitle))
+                candidate += index
+        }
+        return candidate
+    }
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun searchBar(
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
+        onSearchBarChanged:(String) -> Unit
     ){
+        val inputText = remember{ mutableStateOf("") }
         TextField(
-            value = "",
-            onValueChange = {},
+            value = inputText.value,
+            onValueChange = {
+                inputText.value = it
+                onSearchBarChanged(it)
+            },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -92,14 +119,16 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (
     @Composable
     fun showSongList(
         modifier: Modifier = Modifier,
+        candidate: ArrayList<Int>
     ){
         LazyColumn(
             modifier = modifier.padding(vertical = 4.dp),
         ){
             items(songList.size){index ->
                 val song = songList[index]
+                val color = if (index in candidate) Color.Red.copy(alpha = 0.1f) else Color.Blue.copy(alpha = 0.05f)
                 Surface(
-                    color = Color.Blue.copy(alpha = 0.05f),
+                    color = color,
                     modifier = Modifier
                         .padding(vertical = 4.dp, horizontal = 8.dp)
                         .height(75.dp)

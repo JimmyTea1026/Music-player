@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
                 switchToMainPage.value = true
             }
         }
-        Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 300),
+        Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 1000),
             label = "navToMain"
         )
         { switchPage ->
@@ -144,11 +144,6 @@ class MainActivity : ComponentActivity() {
                         Page.PLAY -> playPage.showPage()
                     }
                 }
-//                when(curPage){
-//                    Page.SONGLIST -> {songPage.showPage()}
-//                    Page.PLAY -> {playPage.showPage()}
-//                }
-
             }
             Box(
                 modifier = Modifier

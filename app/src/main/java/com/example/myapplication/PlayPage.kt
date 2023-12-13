@@ -4,6 +4,14 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.util.Log
+import android.widget.ProgressBar
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,8 +88,8 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
             currentSong.value = nextSong
             song = songList[currentSong.value]
             initMediaPlayer()
-            mediaPlayer.seekTo(0)
             mediaPlayer.start()
+            mediaPlayer.seekTo(0)
         }
     }
 
@@ -92,6 +101,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
         LaunchedEffect(key1 = this.currentSong.value){
             resetPage.value = true
         }
+        // 有空做滑動特效
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -111,12 +121,12 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(top = 10.dp),
-                )
+            )
             progressBar(
                 Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                )
+            )
         }
     }
     @Composable
@@ -190,7 +200,11 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                         )
                     }
 
-                    val checkedState = remember{ mutableStateOf(mediaPlayer.isPlaying) }
+                    val checkedState = remember{ mutableStateOf(false) }
+                    LaunchedEffect(key1 = mediaPlayer.isPlaying){
+                        if(mediaPlayer.isPlaying) checkedState.value = true
+                        else checkedState.value = false
+                    }
                     IconToggleButton(
                         modifier = Modifier.weight(.1f),
                         checked = checkedState.value,
@@ -232,25 +246,36 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
     fun progressBar(
         modifer : Modifier = Modifier
     ){
+
         val duration = mediaPlayer.duration/1000
         var curPos by remember { mutableStateOf(0) }
-        var isPlaying by remember{ mutableStateOf(mediaPlayer.isPlaying) }
-        LaunchedEffect(isPlaying) {
+        LaunchedEffect(mediaPlayer) {
             while (true) {
                 curPos = mediaPlayer.currentPosition/1000
-                delay(100)
+                delay(500)
             }
         }
-        val progress = curPos.toFloat()/duration.toFloat()
+
+        var isUserChangingSlider by remember{ mutableStateOf(false) }
+        var sliderValue by remember{ mutableStateOf(0f) }
+
         Box(modifier = modifer){
             Column() {
-                LinearProgressIndicator(
-                    progress = progress,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 30.dp)
+                Slider(
+                    value = if (isUserChangingSlider) sliderValue
+                    else curPos.toFloat() / duration.toFloat(),
+                    onValueChange = {newValue ->
+                        isUserChangingSlider = true
+                        mediaPlayer.pause()
+                        sliderValue = newValue
+                    },
+                    onValueChangeFinished = {
+                        val des = (sliderValue*duration*1000).toInt()
+                        mediaPlayer.seekTo(des)
+                        mediaPlayer.start()
+                        isUserChangingSlider = false
+                    }
                 )
-
                 Row(){
                     val curMinute : Int = curPos/60
                     val curSecond : Int = curPos%60
