@@ -145,8 +145,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
             Column(modifier = modifer) {
                 Text(
                     text = title,
-                    style = TextStyle(fontSize = 30.sp),
-                    fontWeight = FontWeight.Bold,
+                    style = TextStyle(fontSize = 26.sp),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -159,7 +158,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 2.dp)
+                        .padding(top = 10.dp)
                 )
             }
         }

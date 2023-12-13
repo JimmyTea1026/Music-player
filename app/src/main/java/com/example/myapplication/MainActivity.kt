@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
                 switchToMainPage.value = true
             }
         }
-        Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 500),
+        Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 300),
             label = "navToMain"
         )
         { switchPage ->
@@ -135,19 +135,19 @@ class MainActivity : ComponentActivity() {
                     .fillMaxWidth()
                     .padding(16.dp)
             ){
-//                Crossfade(targetState = curPage.value, animationSpec = tween(durationMillis = 500),
-//                    label = ""
-//                )
-//                { curPage ->
-//                    when(curPage){
-//                        Page.SONGLIST -> mainPage()
-//                        Page.PLAY -> navPage()
-//                    }
-//                }
-                when(curPage){
-                    Page.SONGLIST -> {songPage.showPage()}
-                    Page.PLAY -> {playPage.showPage()}
+                Crossfade(targetState = curPage, animationSpec = tween(durationMillis = 300),
+                    label = ""
+                )
+                { page ->
+                    when(page){
+                        Page.SONGLIST -> songPage.showPage()
+                        Page.PLAY -> playPage.showPage()
+                    }
                 }
+//                when(curPage){
+//                    Page.SONGLIST -> {songPage.showPage()}
+//                    Page.PLAY -> {playPage.showPage()}
+//                }
 
             }
             Box(
@@ -204,7 +204,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun navPage(){
-        Surface(color = Color.LightGray) {
+        Surface(color = Color.Blue.copy(0.1f)) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center

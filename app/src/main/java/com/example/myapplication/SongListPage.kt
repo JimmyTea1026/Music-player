@@ -93,14 +93,13 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (
     fun showSongList(
         modifier: Modifier = Modifier,
     ){
-        val list = (1..100).toList()
         LazyColumn(
             modifier = modifier.padding(vertical = 4.dp),
         ){
             items(songList.size){index ->
                 val song = songList[index]
                 Surface(
-                    color = Color.Blue.copy(alpha = 0.1f),
+                    color = Color.Blue.copy(alpha = 0.05f),
                     modifier = Modifier
                         .padding(vertical = 4.dp, horizontal = 8.dp)
                         .height(75.dp)
@@ -126,7 +125,6 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (
                             Text(text = song.getTitle(),
                                 textAlign = TextAlign.Center,
                                 style = TextStyle(fontSize = 20.sp),
-//                                fontWeight = FontWeight.Bold,
                             )
                         }
                         Box(modifier = Modifier
@@ -138,7 +136,6 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (
                                 textAlign = TextAlign.Right,
                                 style = TextStyle(fontSize = 13.sp),
                                 color = Color.DarkGray.copy(alpha = 0.7f)
-//                                fontWeight = FontWeight.Bold,
                             )
                         }
                     }
