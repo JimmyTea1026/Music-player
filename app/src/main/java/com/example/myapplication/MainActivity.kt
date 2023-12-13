@@ -92,19 +92,19 @@ class MainActivity : ComponentActivity() {
                         if (files != null) {
                             for (file in files) {
                                 val filePath = "$path/$artist/$title/$file"
-                                if (filePath.endsWith(".png")) coverPath = filePath
-                                else if (filePath.endsWith(".mp3")) songPath = filePath
+                                if (filePath.endsWith(".mp3")) songPath = filePath
+                                else coverPath = filePath
                             }
                         }
+                        val song: Song = Song()
+                        song.setInformation(
+                            songTitle = songTitle,
+                            coverPath = coverPath,
+                            songPath = songPath,
+                            artist = artist
+                        )
+                        songList += song
                     }
-                    val song: Song = Song()
-                    song.setInformation(
-                        songTitle = songTitle,
-                        coverPath = coverPath,
-                        songPath = songPath,
-                        artist = artist
-                    )
-                    songList += song
                 }
             }
         }
@@ -118,13 +118,13 @@ class MainActivity : ComponentActivity() {
     fun mainPage(
         modifier: Modifier = Modifier
     ) {
-        val curPage = remember { mutableStateOf(Page.SONGLIST) }
-        val playPage = PlayPage(this, songList)
+        var curPage by remember { mutableStateOf(Page.SONGLIST) }
+        var playPage by remember{ mutableStateOf(PlayPage(this, songList))}
         val changeSong:(Int) -> Unit = { nextSong->
-            curPage.value = Page.PLAY
+            curPage = Page.PLAY
             playPage.setSong(nextSong)
         }
-        val songPage = SongListPage(this, songList, changeSong)
+        var songPage by remember{mutableStateOf(SongListPage(this, songList, changeSong))}
 
         Column(
             modifier = Modifier.fillMaxSize()
@@ -144,7 +144,7 @@ class MainActivity : ComponentActivity() {
 //                        Page.PLAY -> navPage()
 //                    }
 //                }
-                when(curPage.value){
+                when(curPage){
                     Page.SONGLIST -> {songPage.showPage()}
                     Page.PLAY -> {playPage.showPage()}
                 }
@@ -156,9 +156,9 @@ class MainActivity : ComponentActivity() {
                     .height(56.dp)
             ){
                 MenuBar(
-                    songListClicked = {curPage.value = Page.SONGLIST},
+                    songListClicked = {curPage = Page.SONGLIST},
                     playClicked = {
-                        curPage.value = Page.PLAY
+                        curPage = Page.PLAY
                     }
                 )
             }

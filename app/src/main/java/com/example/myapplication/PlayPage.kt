@@ -44,29 +44,42 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 
 class PlayPage(context:Context?, songList: ArrayList<Song>){
     val assetManager = context!!.assets
     val songList = songList
-    var currentSong = 0
+    val currentSong = mutableStateOf(0)
     var song = songList[0]
     val mediaPlayer = MediaPlayer()
     init{
         initMediaPlayer()
     }
     fun initMediaPlayer(){
-        val des = assetManager.openFd(song.getPath())
-        mediaPlayer.setDataSource(des)
-        mediaPlayer.prepare()
-        mediaPlayer.seekTo(0)
+        try{
+            mediaPlayer.reset()
+            val path = song.getPath()
+            val des = assetManager.openFd(path)
+            mediaPlayer.setDataSource(des)
+            mediaPlayer.prepare()
+        }catch (e:IOException){
+            e.printStackTrace()
+        }
     }
-    fun setSong(nextSong:Int){
-        if(nextSong != currentSong){
-            currentSong = nextSong
-            song = songList[currentSong]
-            mediaPlayer.release()
+    fun setSong(nextIdx:Int){
+        var nextSong = nextIdx
+        if(nextSong >= songList.size){
+            nextSong = 0
+        }
+        else if(nextSong < 0){
+            nextSong = songList.size-1
+        }
+        if(nextSong != currentSong.value){
+            currentSong.value = nextSong
+            song = songList[currentSong.value]
             initMediaPlayer()
+            mediaPlayer.seekTo(0)
             mediaPlayer.start()
         }
     }
@@ -75,7 +88,10 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
     fun showPage(
         modifier: Modifier = Modifier
     ) {
-
+        val resetPage = remember{ mutableStateOf(false) }
+        LaunchedEffect(key1 = this.currentSong.value){
+            resetPage.value = true
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -94,7 +110,8 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                 Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(top = 10.dp))
+                    .padding(top = 10.dp),
+                )
             progressBar(
                 Modifier
                     .weight(1f)
@@ -128,7 +145,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
             Column(modifier = modifer) {
                 Text(
                     text = title,
-                    style = TextStyle(fontSize = 36.sp),
+                    style = TextStyle(fontSize = 30.sp),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -166,7 +183,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                     val iconSize = 50.dp
                     IconButton(
                         modifier = Modifier.weight(.1f),
-                        onClick = { /*TODO*/ }
+                        onClick = { setSong(currentSong.value-1) }
                     ) {
                         Icon(
                             Icons.Filled.KeyboardArrowLeft, contentDescription = "Last Song",
@@ -174,7 +191,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                         )
                     }
 
-                    val checkedState = remember{ mutableStateOf(false) }
+                    val checkedState = remember{ mutableStateOf(mediaPlayer.isPlaying) }
                     IconToggleButton(
                         modifier = Modifier.weight(.1f),
                         checked = checkedState.value,
@@ -200,7 +217,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
 
                     IconButton(
                         modifier = Modifier.weight(.1f),
-                        onClick = { /*TODO*/ }
+                        onClick = { setSong(currentSong.value+1) }
                     ) {
                         Icon(
                             Icons.Filled.KeyboardArrowRight, contentDescription = "Next Song",
@@ -211,17 +228,16 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
             }
         }
     }
+
     @Composable
     fun progressBar(
         modifer : Modifier = Modifier
     ){
-        var count by remember { mutableStateOf(0) }
-        var curPos by remember { mutableStateOf(0) }
         val duration = mediaPlayer.duration/1000
+        var curPos by remember { mutableStateOf(0) }
         var isPlaying by remember{ mutableStateOf(mediaPlayer.isPlaying) }
         LaunchedEffect(isPlaying) {
             while (true) {
-//                count++
                 curPos = mediaPlayer.currentPosition/1000
                 delay(100)
             }

@@ -1,6 +1,8 @@
 package com.example.myapplication
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -26,6 +28,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -36,9 +39,10 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import java.io.File
 
-class SongListPage(context : Context?, songList : ArrayList<Song>, changSong: (Int) -> Unit){
+class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (Int) -> Unit){
+    val assetManager = context!!.assets
     val songList = songList
-    val changSong = changSong
+    val changeSong = changeSong
 
     @Composable
     fun showPage(
@@ -101,7 +105,7 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changSong: (I
                         .padding(vertical = 4.dp, horizontal = 8.dp)
                         .height(75.dp)
                         .clickable {
-                            changSong(index)
+                            changeSong(index)
                         }
                 ) {
                     Row (
@@ -110,7 +114,9 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changSong: (I
                             .padding(vertical = 10.dp, horizontal = 10.dp),
 
                     ){
-                        Image(painter = painterResource(id = R.drawable.cover), contentDescription = "")
+                        val coverPath = song.getCoverPath()
+                        val cover = BitmapFactory.decodeStream(assetManager.open(coverPath))
+                        Image(bitmap = cover.asImageBitmap(), contentDescription = "")
                         Box(modifier = Modifier
                             .weight(2f)
                             .fillMaxSize()
@@ -119,7 +125,7 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changSong: (I
                         ){
                             Text(text = song.getTitle(),
                                 textAlign = TextAlign.Center,
-                                style = TextStyle(fontSize = 25.sp),
+                                style = TextStyle(fontSize = 20.sp),
 //                                fontWeight = FontWeight.Bold,
                             )
                         }
