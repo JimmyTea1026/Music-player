@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.PlayPage.PlayPage
 import com.example.myapplication.SongList.SongListPage
+import com.example.myapplication.SongList.SongListView
+import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -49,6 +51,10 @@ object MVVMDict {
     }
     fun get(key: String): Any? {
         return mvvmMap[key]
+    }
+
+    fun getMap():MutableMap<String, Any>{
+        return mvvmMap
     }
 }
 class MainActivity : ComponentActivity() {
@@ -65,8 +71,11 @@ class MainActivity : ComponentActivity() {
         val songRepository = SongRepository(MVVMDict)
         songRepository.setContext(this)
         songRepository.initSongList()
-//        com.example.myapplication.SongList.ViewModel(MVVMDict)
-//        com.example.myapplication.SongList.View(MVVMDict)
+        SongListView(MVVMDict)
+        SongListViewModel(MVVMDict)
+    }
+    fun initMVVM(){
+
     }
     @Composable
     fun showNavPage(){
@@ -98,6 +107,8 @@ class MainActivity : ComponentActivity() {
         modifier: Modifier = Modifier
     ) {
         val songRepository = MVVMDict.get("SongRepository")
+        val songListView = MVVMDict.get("SongListView") as SongListView
+        songListView.initalize()
         var curPage by remember { mutableStateOf(Page.SONGLIST) }
         var playPage by remember{ mutableStateOf(PlayPage(this, songRepository))}
         val changeSong:(Int) -> Unit = { nextSong->
@@ -121,7 +132,7 @@ class MainActivity : ComponentActivity() {
                 )
                 { page ->
                     when(page){
-                        Page.SONGLIST -> songListPage.showPage()
+                        Page.SONGLIST -> songListView.showPage()
 //                        Page.SONGLIST -> customNotification(playPage)
                         Page.PLAY -> playPage.showPage()
                     }
