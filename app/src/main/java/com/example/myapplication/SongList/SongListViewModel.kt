@@ -3,7 +3,7 @@
 //import com.example.myapplication.MVVMDict
 //import com.example.myapplication.Model.SongRepository
 //
-//class ViewModel(private val mvvmDict: MVVMDict) {
+//class SongListViewModel(private val mvvmDict: MVVMDict) {
 //    private val candidate = arrayListOf<Int>()
 //    private val re = MVVMDict.get("SongRepository")
 //    init{

@@ -136,8 +136,7 @@ class PlayPage(context:Context?, re : Any?){
         LaunchedEffect(key1 = this.currentSong.value){
             resetPage.value = true
         }
-        val coverPath = song.getCoverPath()
-        val cover = BitmapFactory.decodeStream(assetManager.open(coverPath))
+        val cover = song.getCover()
 
         val coroutineScope = rememberCoroutineScope()
         var lastEventTimestamp by remember{ mutableStateOf(0L) }

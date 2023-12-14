@@ -65,8 +65,8 @@ class MainActivity : ComponentActivity() {
         val songRepository = SongRepository(MVVMDict)
         songRepository.setContext(this)
         songRepository.initSongList()
-//        com.example.myapplication.SongList.View(MVVMDict)
 //        com.example.myapplication.SongList.ViewModel(MVVMDict)
+//        com.example.myapplication.SongList.View(MVVMDict)
     }
     @Composable
     fun showNavPage(){

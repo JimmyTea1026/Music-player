@@ -140,8 +140,7 @@ class SongListPage(context : Context?, re : Any?, changeSong: (Int) -> Unit){
                             .padding(vertical = 10.dp, horizontal = 10.dp),
 
                     ){
-                        val coverPath = song.getCoverPath()
-                        val cover = BitmapFactory.decodeStream(assetManager.open(coverPath))
+                        val cover = song.getCover()
                         Image(
                             bitmap = cover.asImageBitmap(),
                             contentDescription = "",

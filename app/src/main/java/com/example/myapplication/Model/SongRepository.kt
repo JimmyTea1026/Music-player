@@ -1,6 +1,8 @@
 package com.example.myapplication.Model
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import com.example.myapplication.MVVMDict
 
 class SongRepository(private val mvvmDict: MVVMDict) {
@@ -39,9 +41,10 @@ class SongRepository(private val mvvmDict: MVVMDict) {
                             }
                         }
                         val song: Song = Song()
+                        val cover = BitmapFactory.decodeStream(assetManager.open(coverPath))
                         song.setInformation(
                             songTitle = songTitle,
-                            coverPath = coverPath,
+                            cover = cover,
                             songPath = songPath,
                             artist = artist
                         )

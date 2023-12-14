@@ -32,12 +32,17 @@
 //import androidx.compose.ui.text.style.TextAlign
 //import androidx.compose.ui.unit.dp
 //import androidx.compose.ui.unit.sp
+//import com.example.myapplication.SongList.SongListViewModel
 //import com.example.myapplication.MVVMDict
+//import com.example.myapplication.Model.Song
 //
-//class View(private val mvvmDict: MVVMDict){
-//    private val viewModel = ViewModel()
+//class SongListView(private val mvvmDict: MVVMDict){
+//    private lateinit var viewModel : SongListViewModel
+//    private lateinit var songList : ArrayList<Song>
 //    init{
 //        MVVMDict.add("SongListView", this)
+//        viewModel = MVVMDict.get("SongListViewModel") as SongListViewModel
+//        songList = MVVMDict.get("SongRepository") as ArrayList<Song>
 //    }
 //    @Composable
 //    fun showPage(
@@ -62,8 +67,6 @@
 //            )
 //        }
 //    }
-//
-//
 //    @OptIn(ExperimentalMaterial3Api::class)
 //    @Composable
 //    fun searchBar(
@@ -74,7 +77,7 @@
 //            value = inputText.value,
 //            onValueChange = {
 //                inputText.value = it
-//                viewModel.search(inputText)
+////                viewModel.search(inputText)
 //            },
 //            leadingIcon = {
 //                Icon(
@@ -94,21 +97,21 @@
 //    @Composable
 //    fun showSongList(
 //        modifier: Modifier = Modifier,
-//        candidate: ArrayList<Int>
 //    ){
 //        LazyColumn(
 //            modifier = modifier.padding(vertical = 4.dp),
 //        ){
 //            items(songList.size){index ->
 //                val song = songList[index]
-//                val color = if (index in candidate) Color.Red.copy(alpha = 0.1f) else Color.Blue.copy(alpha = 0.05f)
+////                val color = if (index in candidate) Color.Red.copy(alpha = 0.1f) else Color.Blue.copy(alpha = 0.05f)
+//                val color = Color.Blue.copy(alpha = 0.05f)
 //                Surface(
 //                    color = color,
 //                    modifier = Modifier
 //                        .padding(vertical = 4.dp, horizontal = 8.dp)
 //                        .height(75.dp)
 //                        .clickable {
-//                            changeSong(index)
+////                            changeSong(index)
 //                        }
 //                ) {
 //                    Row (
