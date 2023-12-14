@@ -3,21 +3,9 @@ package com.example.myapplication
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.media.MediaPlayer
-import android.util.Log
-import android.widget.ProgressBar
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,9 +55,9 @@ import java.io.IOException
 import kotlin.math.roundToInt
 
 
-class PlayPage(context:Context?, songList: ArrayList<Song>){
+class PlayPage(context:Context?, re : SongRepository,){
     val assetManager = context!!.assets
-    val songList = songList
+    val songList = re.getSongList()
     val currentSong = mutableStateOf(0)
     var song = songList[0]
     val mediaPlayer = MediaPlayer()
@@ -126,7 +114,9 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
             songInformation(
                 Modifier
                     .weight(1f)
-                    .fillMaxSize())
+                    .fillMaxSize(),
+                fontSize = 26
+            )
             buttons(
                 Modifier
                     .weight(1f)
@@ -137,6 +127,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                 Modifier
                     .weight(1f)
                     .fillMaxWidth(),
+                fontSize = 12
             )
         }
     }
@@ -178,7 +169,8 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
     }
     @Composable
     fun songInformation(
-        modifier : Modifier = Modifier
+        modifier : Modifier = Modifier,
+        fontSize : Int
     ){
         val resetPage = remember{ mutableStateOf(false) }
         LaunchedEffect(key1 = this.currentSong.value){
@@ -190,7 +182,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
             Column(modifier = modifier) {
                 Text(
                     text = title,
-                    style = TextStyle(fontSize = 26.sp),
+                    style = TextStyle(fontSize = fontSize.sp),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -198,7 +190,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                 )
                 Text(
                     text = artist,
-                    style = TextStyle(fontSize = 16.sp),
+                    style = TextStyle(fontSize = (fontSize/2).sp),
                     fontWeight = FontWeight.Light,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -219,12 +211,12 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
         Box(modifier = modifier){
             Box(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    ,
                 contentAlignment = Alignment.Center
             ){
                 Row(
                     modifier = Modifier
-                        .fillMaxSize(),
+                        ,
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ){
@@ -283,7 +275,8 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
 
     @Composable
     fun progressBar(
-        modifier : Modifier = Modifier
+        modifier : Modifier = Modifier,
+        fontSize: Int
     ){
         val resetPage = remember{ mutableStateOf(false) }
         LaunchedEffect(key1 = this.currentSong.value){
@@ -330,7 +323,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                     val curStrSec : String = if(curSecond>=10) "$curSecond" else "0$curSecond"
                     Text(
                         text = "$curStrMin : $curStrSec",
-                        style = TextStyle(fontSize = 12.sp),
+                        style = TextStyle(fontSize = fontSize.sp),
                         textAlign = TextAlign.Start,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -344,7 +337,7 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                     val strSec : String = if(second>=10) "$second" else "0$second"
                     Text(
                         text = "$strMin : $strSec",
-                        style = TextStyle(fontSize = 12.sp),
+                        style = TextStyle(fontSize = fontSize.sp),
                         textAlign = TextAlign.End,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -354,5 +347,9 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                 }
             }
         }
+    }
+
+    fun getInfo():Pair<Song, MediaPlayer>{
+        return Pair(song, mediaPlayer)
     }
 }

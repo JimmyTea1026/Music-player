@@ -1,14 +1,20 @@
 package com.example.myapplication
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.RemoteViews
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
@@ -36,17 +43,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationManagerCompat
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    var songList = arrayListOf<Song>()
+    val songRepository = SongRepository()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-                songList = initSongList(this)
+                songRepository.setContext(this)
+                songRepository.initSongList()
                 showNavPage()
             }
         }
@@ -72,44 +81,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    fun initSongList(context: Context): ArrayList<Song> {
-        val songList = arrayListOf<Song>()
-        val assetManager = context.assets
-        val path = "music"
-        val assetList = assetManager.list(path)
-        if (assetList != null) {
-            for(artist in assetList){
-                var artist = artist
-                var coverPath = ""
-                var songPath = ""
-                var songTitle = ""
-
-                val songs = assetManager.list("$path/$artist")
-                if (songs != null) {
-                    for (title in songs) {
-                        songTitle = title
-                        val files = assetManager.list("$path/$artist/$title")
-                        if (files != null) {
-                            for (file in files) {
-                                val filePath = "$path/$artist/$title/$file"
-                                if (filePath.endsWith(".mp3")) songPath = filePath
-                                else coverPath = filePath
-                            }
-                        }
-                        val song: Song = Song()
-                        song.setInformation(
-                            songTitle = songTitle,
-                            coverPath = coverPath,
-                            songPath = songPath,
-                            artist = artist
-                        )
-                        songList += song
-                    }
-                }
-            }
-        }
-        return songList
-    }
 
     enum class Page{
         SONGLIST, PLAY
@@ -119,12 +90,13 @@ class MainActivity : ComponentActivity() {
         modifier: Modifier = Modifier
     ) {
         var curPage by remember { mutableStateOf(Page.SONGLIST) }
-        var playPage by remember{ mutableStateOf(PlayPage(this, songList))}
+        var playPage by remember{ mutableStateOf(PlayPage(this, songRepository))}
         val changeSong:(Int) -> Unit = { nextSong->
             curPage = Page.PLAY
             playPage.setSong(nextSong)
         }
-        var songPage by remember{mutableStateOf(SongListPage(this, songList, changeSong))}
+        var songListPage by remember{mutableStateOf(SongListPage(this, songRepository, changeSong))}
+        createCustomNotification(playPage)
 
         Column(
             modifier = Modifier.fillMaxSize()
@@ -140,7 +112,8 @@ class MainActivity : ComponentActivity() {
                 )
                 { page ->
                     when(page){
-                        Page.SONGLIST -> songPage.showPage()
+                        Page.SONGLIST -> songListPage.showPage()
+//                        Page.SONGLIST -> customNotification(playPage)
                         Page.PLAY -> playPage.showPage()
                     }
                 }
@@ -195,8 +168,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-
     @Composable
     fun navPage(){
         Surface(color = Color.Blue.copy(0.1f)) {
@@ -212,21 +183,47 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
+    @Composable
+    fun customNotification(playPage: PlayPage?){
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color.Yellow.copy(0.05f))
+                .height(100.dp)
+                .width(500.dp)
+        ) {
+            Row {
+                playPage?.coverImage(
+                    Modifier.weight(1f).height(50.dp).width(60.dp))
+                playPage?.songInformation(
+                    Modifier.weight(1f),
+                    fontSize = 15
+                )
+                playPage?.progressBar(
+                    Modifier.weight(1f).fillMaxWidth(),
+                    fontSize = 8
+                )
+                playPage?.buttons(
+                    Modifier.weight(1f).fillMaxWidth()
+                )
 
-@Preview(showBackground = true)
-@Composable
-fun MaingPagePreview() {
-    MyApplicationTheme {
-        MainActivity().mainPage()
+            }
+
+        }
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun navPagePreview(){
-    MyApplicationTheme{
-        MainActivity().navPage()
+    fun createCustomNotification(playPage: PlayPage){
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = NotificationChannel("music", "MusicPlayer", NotificationManager.IMPORTANCE_HIGH)
+            val notificationManager = this.getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+        }
+        val builder = Notification.Builder(this, "music")
+        builder.setSmallIcon(R.drawable.music)
+
+            .setContentTitle("MusicPlayer")
+            .setContentText("Now playing")
+
     }
 }

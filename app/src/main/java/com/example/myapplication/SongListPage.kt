@@ -44,9 +44,9 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import java.io.File
 
-class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (Int) -> Unit){
+class SongListPage(context : Context?, re : SongRepository, changeSong: (Int) -> Unit){
     val assetManager = context!!.assets
-    val songList = songList
+    val songList = re.getSongList()
     val changeSong = changeSong
 
     @Composable
@@ -181,10 +181,3 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun songPagePreview(){
-    MyApplicationTheme {
-//        SongListPage(null, "").songList()
-    }
-}
