@@ -13,6 +13,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +24,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -43,17 +49,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
+import kotlin.math.roundToInt
 
 
 class PlayPage(context:Context?, songList: ArrayList<Song>){
@@ -131,12 +140,18 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
     }
     @Composable
     fun coverImage(
-        modifer : Modifier = Modifier
+        modifier : Modifier = Modifier
     ){
+        val resetPage = remember{ mutableStateOf(false) }
+        LaunchedEffect(key1 = this.currentSong.value){
+            resetPage.value = true
+        }
         val coverPath = song.getCoverPath()
         val cover = BitmapFactory.decodeStream(assetManager.open(coverPath))
 
-        Box(modifier = modifer) {
+        var offsetX by remember { mutableStateOf(0f) }
+        Box(modifier = modifier
+        ) {
             Image(
                 bitmap = cover.asImageBitmap(),
                 contentDescription = "Icon",
@@ -147,12 +162,16 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
     }
     @Composable
     fun songInformation(
-        modifer : Modifier = Modifier
+        modifier : Modifier = Modifier
     ){
+        val resetPage = remember{ mutableStateOf(false) }
+        LaunchedEffect(key1 = this.currentSong.value){
+            resetPage.value = true
+        }
         var title = song.getTitle()
         var artist = song.getArtist()
-        Box(modifier = modifer){
-            Column(modifier = modifer) {
+        Box(modifier = modifier){
+            Column(modifier = modifier) {
                 Text(
                     text = title,
                     style = TextStyle(fontSize = 26.sp),
@@ -175,9 +194,13 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
     }
     @Composable
     fun buttons(
-        modifer : Modifier = Modifier
+        modifier : Modifier = Modifier
     ){
-        Box(modifier = modifer){
+        val resetPage = remember{ mutableStateOf(false) }
+        LaunchedEffect(key1 = this.currentSong.value){
+            resetPage.value = true
+        }
+        Box(modifier = modifier){
             Box(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -244,27 +267,33 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
 
     @Composable
     fun progressBar(
-        modifer : Modifier = Modifier
+        modifier : Modifier = Modifier
     ){
-
+        val resetPage = remember{ mutableStateOf(false) }
+        LaunchedEffect(key1 = this.currentSong.value){
+            resetPage.value = true
+        }
         val duration = mediaPlayer.duration/1000
         var curPos by remember { mutableStateOf(0) }
         LaunchedEffect(mediaPlayer) {
             while (true) {
                 curPos = mediaPlayer.currentPosition/1000
                 delay(500)
+                if(curPos == duration) setSong(currentSong.value+1)
             }
         }
 
         var isUserChangingSlider by remember{ mutableStateOf(false) }
         var sliderValue by remember{ mutableStateOf(0f) }
+        var playingWhenChange by remember{ mutableStateOf(false) }
 
-        Box(modifier = modifer){
+        Box(modifier = modifier){
             Column() {
                 Slider(
                     value = if (isUserChangingSlider) sliderValue
                     else curPos.toFloat() / duration.toFloat(),
                     onValueChange = {newValue ->
+                        if(mediaPlayer.isPlaying) playingWhenChange = true
                         isUserChangingSlider = true
                         mediaPlayer.pause()
                         sliderValue = newValue
@@ -272,8 +301,10 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                     onValueChangeFinished = {
                         val des = (sliderValue*duration*1000).toInt()
                         mediaPlayer.seekTo(des)
-                        mediaPlayer.start()
+                        if(playingWhenChange) mediaPlayer.start()
+                        curPos = mediaPlayer.currentPosition/1000
                         isUserChangingSlider = false
+                        playingWhenChange = false
                     }
                 )
                 Row(){

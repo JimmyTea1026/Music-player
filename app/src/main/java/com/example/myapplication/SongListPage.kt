@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -29,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
@@ -144,7 +147,11 @@ class SongListPage(context : Context?, songList : ArrayList<Song>, changeSong: (
                     ){
                         val coverPath = song.getCoverPath()
                         val cover = BitmapFactory.decodeStream(assetManager.open(coverPath))
-                        Image(bitmap = cover.asImageBitmap(), contentDescription = "")
+                        Image(
+                            bitmap = cover.asImageBitmap(),
+                            contentDescription = "",
+                            modifier = Modifier.width(100.dp).height(100.dp)
+                        )
                         Box(modifier = Modifier
                             .weight(2f)
                             .fillMaxSize()
