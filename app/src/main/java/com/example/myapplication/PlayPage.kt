@@ -16,6 +16,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,6 +60,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -149,7 +151,8 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
         val coverPath = song.getCoverPath()
         val cover = BitmapFactory.decodeStream(assetManager.open(coverPath))
 
-        var offsetX by remember { mutableStateOf(0f) }
+        val coroutineScope = rememberCoroutineScope()
+        var lastEventTimestamp by remember{ mutableStateOf(0L) }
         Box(modifier = modifier
         ) {
             Image(
@@ -157,6 +160,19 @@ class PlayPage(context:Context?, songList: ArrayList<Song>){
                 contentDescription = "Icon",
                 modifier = Modifier
                     .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, pan, _, _ ->
+                            val currentTimestamp = System.currentTimeMillis()
+                            if (currentTimestamp - lastEventTimestamp > 100L) {
+                                lastEventTimestamp = currentTimestamp
+                                coroutineScope.launch {
+                                    delay(200)
+                                    if (pan.x > 30) setSong(currentSong.value - 1)
+                                    else if (pan.x < -30) setSong(currentSong.value + 1)
+                                }
+                            }
+                        }
+                    }
             )
         }
     }
