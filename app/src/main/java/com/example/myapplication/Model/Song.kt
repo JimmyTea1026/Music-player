@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.Model
 import android.graphics.Bitmap
 import android.graphics.Path
 import android.media.MediaMetadataRetriever

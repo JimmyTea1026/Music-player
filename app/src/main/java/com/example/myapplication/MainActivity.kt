@@ -3,12 +3,7 @@ package com.example.myapplication
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
-import android.media.MediaPlayer
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.widget.RemoteViews
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
@@ -38,27 +33,40 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role.Companion.Image
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationManagerCompat
+import com.example.myapplication.Model.SongRepository
+import com.example.myapplication.PlayPage.PlayPage
+import com.example.myapplication.SongList.SongListPage
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+object MVVMDict {
+    private val mvvmMap: MutableMap<String, Any> = mutableMapOf()
+    fun add(key: String, viewModel: Any) {
+        mvvmMap[key] = viewModel
+    }
+    fun get(key: String): Any? {
+        return mvvmMap[key]
+    }
+}
 class MainActivity : ComponentActivity() {
-    val songRepository = SongRepository()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-                songRepository.setContext(this)
-                songRepository.initSongList()
+                initDict()
                 showNavPage()
             }
         }
+    }
+    fun initDict(){
+        val songRepository = SongRepository(MVVMDict)
+        songRepository.setContext(this)
+        songRepository.initSongList()
+//        com.example.myapplication.SongList.View(MVVMDict)
+//        com.example.myapplication.SongList.ViewModel(MVVMDict)
     }
     @Composable
     fun showNavPage(){
@@ -89,6 +97,7 @@ class MainActivity : ComponentActivity() {
     fun mainPage(
         modifier: Modifier = Modifier
     ) {
+        val songRepository = MVVMDict.get("SongRepository")
         var curPage by remember { mutableStateOf(Page.SONGLIST) }
         var playPage by remember{ mutableStateOf(PlayPage(this, songRepository))}
         val changeSong:(Int) -> Unit = { nextSong->

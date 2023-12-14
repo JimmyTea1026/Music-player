@@ -1,10 +1,14 @@
-package com.example.myapplication
+package com.example.myapplication.Model
 
 import android.content.Context
+import com.example.myapplication.MVVMDict
 
-class SongRepository {
+class SongRepository(private val mvvmDict: MVVMDict) {
     private val songList = ArrayList<Song>()
     private lateinit var context:Context
+    init{
+        mvvmDict.add("SongRepository", this)
+    }
     fun getSongList():ArrayList<Song>{
         return songList
     }

@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.PlayPage
 
 import android.content.Context
 import android.graphics.BitmapFactory
@@ -13,24 +13,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,25 +39,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.ui.theme.MyApplicationTheme
-import kotlinx.coroutines.coroutineScope
+import com.example.myapplication.R
+import com.example.myapplication.Model.Song
+import com.example.myapplication.Model.SongRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
-import kotlin.math.roundToInt
 
 
-class PlayPage(context:Context?, re : SongRepository,){
+class PlayPage(context:Context?, re : Any?){
     val assetManager = context!!.assets
-    val songList = re.getSongList()
     val currentSong = mutableStateOf(0)
-    var song = songList[0]
     val mediaPlayer = MediaPlayer()
+    private lateinit var songList : ArrayList<Song>
+    private lateinit var song : Song
     init{
+        val songRepository = re as SongRepository
+        songList = songRepository.getSongList()
+        song = songList[currentSong.value]
         initMediaPlayer()
     }
     fun initMediaPlayer(){
