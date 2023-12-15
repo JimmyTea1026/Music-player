@@ -110,14 +110,15 @@ class MainActivity : ComponentActivity() {
     ) {
         val songRepository = MVVMDict.get("SongRepository") as SongRepository
         val songListView = MVVMDict.get("SongListView") as SongListView
+        val songListViewModel = MVVMDict.get("SongListViewModel") as SongListViewModel
         var curPage by remember { mutableStateOf(Page.SONGLIST) }
-        var playPage by remember{ mutableStateOf(PlayPage(this, songRepository))}
-        val changeSong:(Int) -> Unit = { nextSong->
-            curPage = Page.PLAY
-            playPage.setSong(nextSong)
+        LaunchedEffect(songListViewModel.onChangeSongIndex.value){
+            if(songListViewModel.onChangeSongIndex.value >= 0) curPage = Page.PLAY
+            //
         }
-        var songListPage by remember{mutableStateOf(SongListPage(this, songRepository, changeSong))}
-        createCustomNotification(playPage)
+
+        var playPage by remember{ mutableStateOf(PlayPage(this, songRepository))}
+
 
         Column(
             modifier = Modifier.fillMaxSize()
@@ -134,7 +135,6 @@ class MainActivity : ComponentActivity() {
                 { page ->
                     when(page){
                         Page.SONGLIST -> songListView.showPage()
-//                        Page.SONGLIST -> customNotification(playPage)
                         Page.PLAY -> playPage.showPage()
                     }
                 }
@@ -216,17 +216,24 @@ class MainActivity : ComponentActivity() {
         ) {
             Row {
                 playPage?.coverImage(
-                    Modifier.weight(1f).height(50.dp).width(60.dp))
+                    Modifier
+                        .weight(1f)
+                        .height(50.dp)
+                        .width(60.dp))
                 playPage?.songInformation(
                     Modifier.weight(1f),
                     fontSize = 15
                 )
                 playPage?.progressBar(
-                    Modifier.weight(1f).fillMaxWidth(),
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                     fontSize = 8
                 )
                 playPage?.buttons(
-                    Modifier.weight(1f).fillMaxWidth()
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
                 )
 
             }

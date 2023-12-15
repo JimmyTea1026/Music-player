@@ -1,6 +1,9 @@
 package com.example.myapplication.SongList
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import com.example.myapplication.MVVMDict
+import com.example.myapplication.MainActivity
 import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
 
@@ -8,7 +11,8 @@ class SongListViewModel(private val mvvmDict: MVVMDict) {
     private lateinit var songList : ArrayList<Song>
     private var observer: (()->Unit)? = null
     val candidate : MutableList<Int> = mutableListOf()
-
+    val onChangeSongIndex : MutableState<Int> = mutableStateOf(-1)
+    val changeSong:(Int) -> Unit = { songIndex-> onChangeSongIndex.value = songIndex }
     init{
         MVVMDict.add("SongListViewModel", this)
     }
@@ -31,4 +35,5 @@ class SongListViewModel(private val mvvmDict: MVVMDict) {
         }
         observer?.invoke()
     }
+
 }

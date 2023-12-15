@@ -115,14 +115,13 @@ class SongListView(private val mvvmDict: MVVMDict){
             items(songList.size){index ->
                 val song = songList[index]
                 val color = if (index in candidate) Color.Red.copy(alpha = 0.1f) else Color.Blue.copy(alpha = 0.05f)
-//                val color = Color.Blue.copy(alpha = 0.05f)
                 Surface(
                     color = color,
                     modifier = Modifier
                         .padding(vertical = 4.dp, horizontal = 8.dp)
                         .height(75.dp)
                         .clickable {
-//                            changeSong(index)
+                            viewModel.changeSong(index)
                         }
                 ) {
                     Row (
