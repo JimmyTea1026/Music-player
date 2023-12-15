@@ -37,6 +37,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.PlayPage.PlayPage
+import com.example.myapplication.PlayPage.PlayPageView
+import com.example.myapplication.PlayPage.PlayPageViewModel
 import com.example.myapplication.SongList.SongListPage
 import com.example.myapplication.SongList.SongListView
 import com.example.myapplication.SongList.SongListViewModel
@@ -69,11 +71,12 @@ class MainActivity : ComponentActivity() {
         }
     }
     fun initDict(){
-        val songRepository = SongRepository(MVVMDict)
-        songRepository.setContext(this)
-        songRepository.initSongList()
+        MVVMDict.add("context", this)
+        (SongRepository(MVVMDict)).initSongList()
         SongListView(MVVMDict)
         SongListViewModel(MVVMDict)
+        PlayPageView(MVVMDict)
+        PlayPageViewModel(MVVMDict)
     }
     fun initMVVM(){
         (MVVMDict.get("SongListView") as SongListView).initialize()
