@@ -49,15 +49,14 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 
 
-class PlayPage(context:Context?, re : Any?){
+class PlayPage(context:Context?, re : SongRepository){
     val assetManager = context!!.assets
     val currentSong = mutableStateOf(0)
     val mediaPlayer = MediaPlayer()
     private lateinit var songList : ArrayList<Song>
     private lateinit var song : Song
     init{
-        val songRepository = re as SongRepository
-        songList = songRepository.getSongList()
+        songList = re.getSongList()
         song = songList[currentSong.value]
         initMediaPlayer()
     }

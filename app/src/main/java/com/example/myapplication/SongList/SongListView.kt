@@ -1,6 +1,5 @@
 package com.example.myapplication.SongList
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -22,6 +20,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,7 +32,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.MVVMDict
 import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
@@ -40,12 +39,16 @@ import com.example.myapplication.Model.SongRepository
 class SongListView(private val mvvmDict: MVVMDict){
     private lateinit var viewModel : SongListViewModel
     private lateinit var songList : ArrayList<Song>
+    private val searchCandidateChanged = mutableStateOf(false)
+    private val observer: ()->Unit = {searchCandidateChanged.value = !searchCandidateChanged.value}
+
     init{
         MVVMDict.add("SongListView", this)
     }
-    fun initalize(){
+    fun initialize(){
         viewModel = MVVMDict.get("SongListViewModel") as SongListViewModel
         songList = (MVVMDict.get("SongRepository") as SongRepository).getSongList()
+        viewModel.addObserver(observer)
     }
     @Composable
     fun showPage(
@@ -80,7 +83,7 @@ class SongListView(private val mvvmDict: MVVMDict){
             value = inputText.value,
             onValueChange = {
                 inputText.value = it
-//                viewModel.search(inputText)
+                viewModel.search(inputText.value)
             },
             leadingIcon = {
                 Icon(
@@ -101,13 +104,18 @@ class SongListView(private val mvvmDict: MVVMDict){
     fun showSongList(
         modifier: Modifier = Modifier,
     ){
+        val candidate by remember { mutableStateOf(viewModel.candidate) }
+        LaunchedEffect(searchCandidateChanged.value) {
+            candidate.clear()
+            candidate.addAll(viewModel.candidate)
+        }
         LazyColumn(
             modifier = modifier.padding(vertical = 4.dp),
         ){
             items(songList.size){index ->
                 val song = songList[index]
-//                val color = if (index in candidate) Color.Red.copy(alpha = 0.1f) else Color.Blue.copy(alpha = 0.05f)
-                val color = Color.Blue.copy(alpha = 0.05f)
+                val color = if (index in candidate) Color.Red.copy(alpha = 0.1f) else Color.Blue.copy(alpha = 0.05f)
+//                val color = Color.Blue.copy(alpha = 0.05f)
                 Surface(
                     color = color,
                     modifier = Modifier
@@ -127,7 +135,9 @@ class SongListView(private val mvvmDict: MVVMDict){
                         Image(
                             bitmap = cover.asImageBitmap(),
                             contentDescription = "",
-                            modifier = Modifier.width(100.dp).height(100.dp)
+                            modifier = Modifier
+                                .width(100.dp)
+                                .height(100.dp)
                         )
                         Box(modifier = Modifier
                             .weight(2f)

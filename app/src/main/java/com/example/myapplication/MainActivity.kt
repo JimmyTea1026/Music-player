@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 initDict()
+                initMVVM()
                 showNavPage()
             }
         }
@@ -75,7 +76,8 @@ class MainActivity : ComponentActivity() {
         SongListViewModel(MVVMDict)
     }
     fun initMVVM(){
-
+        (MVVMDict.get("SongListView") as SongListView).initialize()
+        (MVVMDict.get("SongListViewModel") as SongListViewModel).initialize()
     }
     @Composable
     fun showNavPage(){
@@ -106,9 +108,8 @@ class MainActivity : ComponentActivity() {
     fun mainPage(
         modifier: Modifier = Modifier
     ) {
-        val songRepository = MVVMDict.get("SongRepository")
+        val songRepository = MVVMDict.get("SongRepository") as SongRepository
         val songListView = MVVMDict.get("SongListView") as SongListView
-        songListView.initalize()
         var curPage by remember { mutableStateOf(Page.SONGLIST) }
         var playPage by remember{ mutableStateOf(PlayPage(this, songRepository))}
         val changeSong:(Int) -> Unit = { nextSong->
