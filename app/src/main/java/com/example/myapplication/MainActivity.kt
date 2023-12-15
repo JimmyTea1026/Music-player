@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
         }
     }
     fun initDict(){
-        MVVMDict.add("context", this)
+        MVVMDict.add("Context", this)
         (SongRepository(MVVMDict)).initSongList()
         SongListView(MVVMDict)
         SongListViewModel(MVVMDict)
@@ -81,6 +81,8 @@ class MainActivity : ComponentActivity() {
     fun initMVVM(){
         (MVVMDict.get("SongListView") as SongListView).initialize()
         (MVVMDict.get("SongListViewModel") as SongListViewModel).initialize()
+        (MVVMDict.get("PlayPageView") as PlayPageView).initialize()
+        (MVVMDict.get("PlayPageViewModel") as PlayPageViewModel).initialize()
     }
     @Composable
     fun showNavPage(){
@@ -114,13 +116,16 @@ class MainActivity : ComponentActivity() {
         val songRepository = MVVMDict.get("SongRepository") as SongRepository
         val songListView = MVVMDict.get("SongListView") as SongListView
         val songListViewModel = MVVMDict.get("SongListViewModel") as SongListViewModel
+        val playPageView = MVVMDict.get("PlayPageView") as PlayPageView
+        val playPageViewModel = MVVMDict.get("PlayPageViewModel") as PlayPageViewModel
+
         var curPage by remember { mutableStateOf(Page.SONGLIST) }
         LaunchedEffect(songListViewModel.onChangeSongIndex.value){
             if(songListViewModel.onChangeSongIndex.value >= 0) curPage = Page.PLAY
             //
         }
 
-        var playPage by remember{ mutableStateOf(PlayPage(this, songRepository))}
+//        var playPage by remember{ mutableStateOf(PlayPage(this, songRepository))}
 
 
         Column(
@@ -138,7 +143,7 @@ class MainActivity : ComponentActivity() {
                 { page ->
                     when(page){
                         Page.SONGLIST -> songListView.showPage()
-                        Page.PLAY -> playPage.showPage()
+                        Page.PLAY -> playPageView.showPage()
                     }
                 }
             }

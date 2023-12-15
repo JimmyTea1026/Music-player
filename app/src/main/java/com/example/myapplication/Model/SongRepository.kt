@@ -7,7 +7,7 @@ import com.example.myapplication.MVVMDict
 
 class SongRepository(private val mvvmDict: MVVMDict) {
     private val songList = ArrayList<Song>()
-    private val context = MVVMDict.get("context") as Context
+    private val context = MVVMDict.get("Context") as Context
     init{
         mvvmDict.add("SongRepository", this)
     }
