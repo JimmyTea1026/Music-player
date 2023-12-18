@@ -112,8 +112,8 @@ object PlayPageView {
                                 lastEventTimestamp = currentTimestamp
                                 coroutineScope.launch {
                                     delay(200)
-                                    if (pan.x > 30) viewModel.setSong(-1)
-                                    else if (pan.x < -30) viewModel.setSong(1)
+                                    if (pan.x > 50) viewModel.setSong(-1)
+                                    else if (pan.x < -50) viewModel.setSong(1)
                                 }
                             }
                         }
@@ -211,7 +211,6 @@ object PlayPageView {
                         modifier = Modifier.weight(.1f),
                         onClick = {
                             viewModel.setSong(1)
-                            Log.d("","here")
                         }
                     ) {
                         Icon(
