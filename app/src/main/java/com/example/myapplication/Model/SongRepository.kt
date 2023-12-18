@@ -1,21 +1,23 @@
 package com.example.myapplication.Model
 
 import android.content.Context
-import android.graphics.Bitmap
+import android.content.res.AssetFileDescriptor
+import android.content.res.AssetManager
 import android.graphics.BitmapFactory
-import com.example.myapplication.MVVMDict
 
-class SongRepository(private val mvvmDict: MVVMDict) {
+
+object SongRepository {
     private val songList = ArrayList<Song>()
-    private val context = MVVMDict.get("Context") as Context
-    init{
-        mvvmDict.add("SongRepository", this)
+    private lateinit var context : Context
+    private lateinit var assetManager : AssetManager
+    fun setContext(context: Context){
+        this.context = context
+        assetManager = this.context.assets
     }
     fun getSongList():ArrayList<Song>{
         return songList
     }
     fun initSongList(){
-        val assetManager = context.assets
         val path = "music"
         val assetList = assetManager.list(path)
         if (assetList != null) {
@@ -50,5 +52,11 @@ class SongRepository(private val mvvmDict: MVVMDict) {
                 }
             }
         }
+    }
+
+    fun getSongDataSource(song: Song) : AssetFileDescriptor {
+        val path = song.getPath()
+        val des = assetManager.openFd(path)
+        return des
     }
 }

@@ -32,22 +32,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.MVVMDict
-import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
 
-class SongListView(private val mvvmDict: MVVMDict){
-    private lateinit var viewModel : SongListViewModel
-    private lateinit var songList : ArrayList<Song>
+object SongListView{
+    private var viewModel = SongListViewModel
     private val searchCandidateChanged = mutableStateOf(false)
     private val observer: ()->Unit = {searchCandidateChanged.value = !searchCandidateChanged.value}
-
+    private var songList = SongRepository.getSongList()
     init{
-        MVVMDict.add("SongListView", this)
-    }
-    fun initialize(){
-        viewModel = MVVMDict.get("SongListViewModel") as SongListViewModel
-        songList = (MVVMDict.get("SongRepository") as SongRepository).getSongList()
         viewModel.addObserver(observer)
     }
     @Composable

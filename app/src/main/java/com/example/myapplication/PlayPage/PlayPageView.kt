@@ -1,7 +1,7 @@
 package com.example.myapplication.PlayPage
 
 import android.graphics.Bitmap
-import android.media.MediaPlayer
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -39,24 +39,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.MVVMDict
-import com.example.myapplication.Model.Song
-import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.R
-import com.example.myapplication.SongList.SongListViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.IOException
 
-class PlayPageView(private val mvvmDict: MVVMDict) {
-    private lateinit var viewModel : PlayPageViewModel
+object PlayPageView {
+    private val viewModel = PlayPageViewModel
     private val currentSongChanged = mutableStateOf(false)
-    private val currentSongObserver: ()->Unit = {currentSongChanged.value = !currentSongChanged.value}
-    init{
-        mvvmDict.add("PlayPageView", this)
+    private val currentSongObserver: ()->Unit = {
+        currentSongChanged.value = !currentSongChanged.value
     }
-    fun initialize(){
-        viewModel = MVVMDict.get("PlayPageViewModel") as PlayPageViewModel
+    init{
         viewModel.addCurrentSongObserver(currentSongObserver)
     }
     @Composable
@@ -187,8 +180,8 @@ class PlayPageView(private val mvvmDict: MVVMDict) {
                         )
                     }
 
-                    var checkedState by remember{ mutableStateOf(viewModel.mediaPlayer.isPlaying) }
-                    LaunchedEffect(key1 = viewModel.mediaPlayer.isPlaying){
+                    var checkedState by remember{ mutableStateOf(false) }
+                    LaunchedEffect(key1 = viewModel.mediaPlayer.isPlaying, key2 = currentSongChanged.value){
                         checkedState = viewModel.mediaPlayer.isPlaying
                     }
                     IconToggleButton(
@@ -216,7 +209,10 @@ class PlayPageView(private val mvvmDict: MVVMDict) {
 
                     IconButton(
                         modifier = Modifier.weight(.1f),
-                        onClick = { viewModel.setSong(1) }
+                        onClick = {
+                            viewModel.setSong(1)
+                            Log.d("","here")
+                        }
                     ) {
                         Icon(
                             Icons.Filled.KeyboardArrowRight, contentDescription = "Next Song",
