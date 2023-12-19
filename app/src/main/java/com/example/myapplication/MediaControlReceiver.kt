@@ -11,8 +11,7 @@ class MediaControlReceiver : BroadcastReceiver() {
         val action = intent?.action
         if (action == "PLAY_PAUSE_ACTION") {
             Log.d("", "ss")
-            if(PlayPageViewModel.mediaPlayer.isPlaying) PlayPageViewModel.mediaPlayerPause()
-            else PlayPageViewModel.mediaPlayerStart()
+//            PlayPageViewModel.mediaPlayerStartPause()
         } else if (action == "NEXT_ACTION") {
             PlayPageViewModel.setSong(1)
         } else if (action == "PREVIOUS_ACTION") {

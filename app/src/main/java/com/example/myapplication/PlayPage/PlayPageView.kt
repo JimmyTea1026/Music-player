@@ -180,27 +180,25 @@ object PlayPageView {
                         )
                     }
 
-                    var checkedState by remember{ mutableStateOf(false) }
-                    LaunchedEffect(key1 = viewModel.mediaPlayer.isPlaying, key2 = currentSongChanged.value){
-                        checkedState = viewModel.mediaPlayer.isPlaying
+                    var isPlaying by remember{ mutableStateOf(false) }
+                    LaunchedEffect(key1 = viewModel.isPlaying.value){
+                        isPlaying = viewModel.isPlaying.value
                     }
                     IconToggleButton(
                         modifier = Modifier.weight(.1f),
-                        checked = checkedState,
+                        checked = isPlaying,
                         onCheckedChange = {
-                            if(checkedState) {
+                            if(isPlaying) {
                                 viewModel.mediaPlayerPause()
-                                checkedState = false
                             }
                             else{
                                 viewModel.mediaPlayerStart()
-                                checkedState = true
                             }
                         },
                     ) {
                         val playIcon = painterResource(id = R.drawable.play)
                         val pauseIcon = painterResource(id = R.drawable.pause)
-                        var icon = if (checkedState) pauseIcon else playIcon
+                        var icon = if (isPlaying) pauseIcon else playIcon
                         Icon(
                             painter = icon, contentDescription = "Play/Pause",
                             modifier = Modifier.size(iconSize),
@@ -228,12 +226,13 @@ object PlayPageView {
         modifier : Modifier = Modifier,
         fontSize: Int
     ){
-        val duration = viewModel.getDuration()
+        var duration by remember { mutableStateOf(1) }
         var curPos by remember { mutableStateOf(0) }
-        LaunchedEffect(viewModel.mediaPlayer.isPlaying) {
+        LaunchedEffect(viewModel.isPlaying.value) {
             while (true) {
                 curPos = viewModel.getCurrentPosition()
-                delay(300)
+                duration = viewModel.getDuration()
+                delay(1000)
             }
         }
         var isUserChangingSlider by remember{ mutableStateOf(false) }
@@ -252,7 +251,7 @@ object PlayPageView {
                         viewModel.mediaPlayerPause()
                     },
                     onValueChangeFinished = {
-                        val newPos = (sliderValue*duration*1000).toInt()
+                        val newPos = (sliderValue*duration).toInt()
                         viewModel.setMediaPosition(newPos)
                         if(playingWhenChange) viewModel.mediaPlayerStart()
                         isUserChangingSlider = false

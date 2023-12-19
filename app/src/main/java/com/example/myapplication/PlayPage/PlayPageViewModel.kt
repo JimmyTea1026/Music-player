@@ -1,71 +1,86 @@
 package com.example.myapplication.PlayPage
 
 import android.media.MediaPlayer
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
-import kotlinx.coroutines.delay
-import java.io.IOException
 
 object PlayPageViewModel{
     private var currentSongIndex = mutableStateOf(0)
     private var currentSongObserver: (()->Unit)? = null
     private var songList : ArrayList<Song>
+    var isPlaying = mutableStateOf(false)
+    var mediaPlayerReady = mutableStateOf(false)
+    var mediaPlayer = MediaPlayer()
     var currentSong : Song
-    var mediaPlayer : MediaPlayer
     init{
         songList = SongRepository.getSongList()
         currentSong = songList[currentSongIndex.value]
-        mediaPlayer = MediaPlayer()
-        initMediaPlayer()
+        setMediaPlayer()
     }
 
     fun addCurrentSongObserver(observer:()->Unit){
         currentSongObserver = observer
     }
-    fun initMediaPlayer(){
-        try{
-            mediaPlayer.reset()
-            mediaPlayer.setOnCompletionListener {
-                setSong(1)
-            }
-            mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
-            mediaPlayer.prepare()
-        }catch (e: IOException){
-            e.printStackTrace()
+    fun setMediaPlayer(){
+        mediaPlayer.reset()
+        mediaPlayerReady.value = false
+        isPlaying.value = false
+        mediaPlayer.setOnCompletionListener {
+            setSong(1)
         }
-    }
-    fun mediaPlayerPause(){mediaPlayer.pause()}
-    fun mediaPlayerStart(){
-        mediaPlayer.start()
-    }
-    fun setSong(nextIdx:Int, setIdx:Boolean=false){
-        var nextSong = if(setIdx) nextIdx else currentSongIndex.value+nextIdx
-        if(nextSong >= songList.size){
-            nextSong = 0
-        }
-        else if(nextSong < 0){
-            nextSong = songList.size-1
-        }
-        if(nextSong != currentSongIndex.value){
-            mediaPlayer.stop()
-            currentSongIndex.value = nextSong
-            currentSong = songList[currentSongIndex.value]
-            initMediaPlayer()
-            mediaPlayer.start()
+        mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
+        mediaPlayer.setOnPreparedListener{
+            mediaPlayerReady.value = true
             mediaPlayer.seekTo(0)
         }
-        currentSongObserver?.invoke()
+        mediaPlayer.prepareAsync()
     }
-    fun setMediaPosition(newPos:Int){
-        mediaPlayer.seekTo(newPos)
+    fun mediaPlayerStart(){
+        if(mediaPlayerReady.value) {
+            mediaPlayer.start()
+            isPlaying.value = true
+        }
+    }
+    fun mediaPlayerPause(){
+        if(mediaPlayerReady.value){
+            mediaPlayer.pause()
+            isPlaying.value = false
+        }
+    }
+    fun setSong(nextIdx:Int, setIdx:Boolean=false){
+        if(mediaPlayerReady.value){
+            var nextSong = if(setIdx) nextIdx else currentSongIndex.value+nextIdx
+            if(nextSong >= songList.size){
+                nextSong = 0
+            }
+            else if(nextSong < 0){
+                nextSong = songList.size-1
+            }
+            if(nextSong != currentSongIndex.value){
+                mediaPlayer.pause()
+                currentSongIndex.value = nextSong
+                currentSong = songList[currentSongIndex.value]
+                setMediaPlayer()
+            }
+            currentSongObserver?.invoke()
+        }
+    }
+    fun setMediaPosition(newPos:Int, based:Boolean=false){
+        if(mediaPlayerReady.value) {
+            val new = if(based) getCurrentPosition()+newPos else newPos
+
+            if(new <= 0) mediaPlayer.seekTo(0)
+            else if(new >= getDuration()) mediaPlayer.seekTo(getDuration())
+            else mediaPlayer.seekTo(new*1000)
+        }
     }
     fun getCurrentPosition():Int{
-        return mediaPlayer.currentPosition/1000
+        if(mediaPlayerReady.value) return mediaPlayer.currentPosition/1000
+        else return 0
     }
     fun getDuration():Int{
-        return mediaPlayer.duration/1000
+        if(mediaPlayerReady.value) return mediaPlayer.duration/1000
+        else return 1
     }
 }

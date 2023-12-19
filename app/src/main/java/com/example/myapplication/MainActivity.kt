@@ -72,9 +72,8 @@ class MainActivity : ComponentActivity() {
                  */
                 SongRepository.initSongList()
                 showNavPage()
-//                startService(Intent(this, SocketServer::class.java))
-                createCustomNotification()
                 wifiConnection()
+                createCustomNotification()
             }
         }
     }
@@ -280,7 +279,12 @@ fun wifiConnection(){
 }
 
 fun mediaPlayerController(cmd:String){
-    if(cmd == "p"){
-
+    if(cmd == "p") {
+        if(PlayPageViewModel.mediaPlayer.isPlaying) PlayPageViewModel.mediaPlayerPause()
+        else PlayPageViewModel.mediaPlayerStart()
     }
+    else if(cmd == "pre") PlayPageViewModel.setSong(-1)
+    else if(cmd == "next") PlayPageViewModel.setSong(1)
+    else if(cmd == "+15") PlayPageViewModel.setMediaPosition(15, true)
+    else if(cmd == "-15") PlayPageViewModel.setMediaPosition(-15, true)
 }
