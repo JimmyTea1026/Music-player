@@ -265,7 +265,7 @@ fun wifiConnection(){
                     while(true){
                         message = reader.readLine()
                         Log.d("接收到訊息", message)
-                        if(message.isNullOrEmpty()) break
+                        if(message == "exit") break
                         else mediaPlayerController(message)
                     }
 

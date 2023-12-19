@@ -9,7 +9,9 @@ cmd = ""
 while(True):
     cmd = input("Enter command: ")
     client_socket.sendall(("%s\n"%cmd).encode('utf-8'))
+    
     if cmd == "exit":
         break
+
 
 client_socket.close()
