@@ -180,7 +180,7 @@ object PlayPageView {
                         )
                     }
 
-                    var isPlaying by remember{ mutableStateOf(false) }
+                    var isPlaying by remember{ mutableStateOf(true) }
                     LaunchedEffect(key1 = viewModel.isPlaying.value){
                         isPlaying = viewModel.isPlaying.value
                     }
@@ -244,10 +244,10 @@ object PlayPageView {
                 Slider(
                     value = if (isUserChangingSlider) sliderValue else curPos.toFloat() / duration.toFloat(),
                     onValueChange = {newValue ->
+                        curPos = (newValue*duration).toInt()
+                        sliderValue = newValue
                         if(viewModel.mediaPlayer.isPlaying) playingWhenChange = true
                         isUserChangingSlider = true
-                        sliderValue = newValue
-                        curPos = (sliderValue*duration).toInt()
                         viewModel.mediaPlayerPause()
                     },
                     onValueChangeFinished = {

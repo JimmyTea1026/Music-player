@@ -9,6 +9,7 @@ object PlayPageViewModel{
     private var currentSongIndex = mutableStateOf(0)
     private var currentSongObserver: (()->Unit)? = null
     private var songList : ArrayList<Song>
+    private var duration = 0
     var isPlaying = mutableStateOf(false)
     var mediaPlayerReady = mutableStateOf(false)
     var mediaPlayer = MediaPlayer()
@@ -26,15 +27,19 @@ object PlayPageViewModel{
         mediaPlayer.reset()
         mediaPlayerReady.value = false
         isPlaying.value = false
+        mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
+        mediaPlayer.prepare()
+        mediaPlayer.setOnPreparedListener{
+            mediaPlayerReady.value = true
+            duration = mediaPlayer.duration/1000
+            mediaPlayer.seekTo(0)
+            mediaPlayer.start()
+            mediaPlayer.pause()
+        }
         mediaPlayer.setOnCompletionListener {
             setSong(1)
         }
-        mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
-        mediaPlayer.setOnPreparedListener{
-            mediaPlayerReady.value = true
-            mediaPlayer.seekTo(0)
-        }
-        mediaPlayer.prepareAsync()
+
     }
     fun mediaPlayerStart(){
         if(mediaPlayerReady.value) {
@@ -51,14 +56,10 @@ object PlayPageViewModel{
     fun setSong(nextIdx:Int, setIdx:Boolean=false){
         if(mediaPlayerReady.value){
             var nextSong = if(setIdx) nextIdx else currentSongIndex.value+nextIdx
-            if(nextSong >= songList.size){
-                nextSong = 0
-            }
-            else if(nextSong < 0){
-                nextSong = songList.size-1
-            }
+            nextSong = if(nextSong >= songList.size) 0 else if(nextSong < 0) songList.size-1 else nextSong
+
             if(nextSong != currentSongIndex.value){
-                mediaPlayer.pause()
+                mediaPlayer.stop()
                 currentSongIndex.value = nextSong
                 currentSong = songList[currentSongIndex.value]
                 setMediaPlayer()
@@ -71,7 +72,7 @@ object PlayPageViewModel{
             val new = if(based) getCurrentPosition()+newPos else newPos
 
             if(new <= 0) mediaPlayer.seekTo(0)
-            else if(new >= getDuration()) mediaPlayer.seekTo(getDuration())
+            else if(new >= duration) mediaPlayer.seekTo(duration*1000)
             else mediaPlayer.seekTo(new*1000)
         }
     }
@@ -80,7 +81,7 @@ object PlayPageViewModel{
         else return 0
     }
     fun getDuration():Int{
-        if(mediaPlayerReady.value) return mediaPlayer.duration/1000
+        if(mediaPlayerReady.value) return duration
         else return 1
     }
 }
