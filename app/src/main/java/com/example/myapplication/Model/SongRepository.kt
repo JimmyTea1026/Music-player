@@ -4,20 +4,19 @@ import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.content.res.AssetManager
 import android.graphics.BitmapFactory
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 
 
 object SongRepository {
     private val songList = ArrayList<Song>()
-    private lateinit var context : Context
     private lateinit var assetManager : AssetManager
-    fun setContext(context: Context){
-        this.context = context
-        assetManager = this.context.assets
-    }
     fun getSongList():ArrayList<Song>{
         return songList
     }
+    @Composable
     fun initSongList(){
+        assetManager= LocalContext.current.assets
         val path = "music"
         val assetList = assetManager.list(path)
         if (assetList != null) {
@@ -53,7 +52,6 @@ object SongRepository {
             }
         }
     }
-
     fun getSongDataSource(song: Song) : AssetFileDescriptor {
         val path = song.getPath()
         val des = assetManager.openFd(path)
