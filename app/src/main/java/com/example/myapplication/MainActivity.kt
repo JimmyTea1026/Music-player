@@ -48,13 +48,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.net.ServerSocket
-import java.net.Socket
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,8 +64,9 @@ class MainActivity : ComponentActivity() {
                     7.LiveDate 替換掉 LaunchedEffect
                  */
                 SongRepository.initSongList()
-                showNavPage()
                 wifiConnection()
+//                LBTConnection()
+                showNavPage()
                 createCustomNotification()
             }
         }
@@ -245,46 +239,4 @@ fun navPage(){
             )
         }
     }
-}
-@Composable
-fun wifiConnection(){
-    fun createServer():ServerSocket{
-        return ServerSocket(8888)
-    }
-    var serverSocket by remember { mutableStateOf<ServerSocket?>(null) }
-    val coroutineScope = rememberCoroutineScope()
-    if(serverSocket == null){
-        LaunchedEffect(true){
-            coroutineScope.launch {
-                withContext(Dispatchers.IO){
-                    serverSocket = createServer()
-                    val clientSocket:Socket = serverSocket!!.accept()
-                    Log.d("", "Client connected: ${clientSocket.inetAddress}")
-                    val reader = BufferedReader(InputStreamReader(clientSocket.getInputStream()))
-                    var message = ""
-                    while(true){
-                        message = reader.readLine()
-                        Log.d("接收到訊息", message)
-                        if(message == "exit") break
-                        else mediaPlayerController(message)
-                    }
-
-                    reader.close()
-                    clientSocket.close()
-                    serverSocket?.close()
-                }
-            }
-        }
-    }
-}
-
-fun mediaPlayerController(cmd:String){
-    if(cmd == "p") {
-        if(PlayPageViewModel.mediaPlayer.isPlaying) PlayPageViewModel.mediaPlayerPause()
-        else PlayPageViewModel.mediaPlayerStart()
-    }
-    else if(cmd == "pre") PlayPageViewModel.setSong(-1)
-    else if(cmd == "next") PlayPageViewModel.setSong(1)
-    else if(cmd == "+15") PlayPageViewModel.setMediaPosition(15, true)
-    else if(cmd == "-15") PlayPageViewModel.setMediaPosition(-15, true)
 }
