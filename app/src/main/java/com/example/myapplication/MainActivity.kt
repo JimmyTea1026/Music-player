@@ -1,15 +1,20 @@
 package com.example.myapplication
 
-import BLEManager
+import android.app.Activity
+import com.example.myapplication.BluetoothLeService
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -38,6 +43,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.PlayPage.PlayPageView
 import com.example.myapplication.PlayPage.PlayPageViewModel
@@ -65,20 +72,18 @@ class MainActivity : ComponentActivity() {
                     assetManager= LocalContext.current.assets)
                 showNavPage()
                 createCustomNotification(this)
-//                startBLE()
-                startWifi()
+                requestPermissions()
             }
         }
     }
     fun startBLE(){
-        val intent = Intent(this, BLEManager::class.java)
-        startActivity(intent)
+        val intent = Intent(this, BluetoothLeService::class.java)
+        startService(intent)
     }
     fun startWifi(){
         val intent = Intent(this, WifiManagerService::class.java)
         startService(intent)
     }
-
     @Composable
     fun showNavPage(){
         val coroutineScope = rememberCoroutineScope()
@@ -101,9 +106,7 @@ class MainActivity : ComponentActivity() {
         }
     }
     @Composable
-    fun mainPage(
-        modifier: Modifier = Modifier
-    ) {
+    fun mainPage() {
         val songListView = SongListView
         val songListViewModel = SongListViewModel
         val playPageView = PlayPageView
@@ -201,7 +204,48 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
+    private val requestMultiplePermissions =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                val granted = permissions.entries.all { it.value }
+                if (granted) {
+                    Log.d("Permission", "Get all permission")
+                    startBLE()
+                    startWifi()
+                } else {
+                    Log.d("Permission", "no permission")
+                }
+            }
+
+    private val requestEnableBt =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                Log.d("Bluetooth", "Bluetooth ON")
+            } else {
+                Log.d("Bluetooth", "Bluetooth off")
+            }
+        }
+    private fun requestPermissions() {
+        val bluetoothmanager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter = bluetoothmanager.adapter
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            requestEnableBt.launch(enableBtIntent)
+        }
+
+        val permissions = arrayOf(
+            android.Manifest.permission.BLUETOOTH,
+            android.Manifest.permission.BLUETOOTH_ADMIN,
+            android.Manifest.permission.BLUETOOTH_SCAN,
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        )
+        requestMultiplePermissions.launch(permissions)
+    }
 }
+
 
 fun createCustomNotification(context:Context){
 //        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -250,7 +294,3 @@ fun createCustomNotification(context:Context){
     notificationManager.createNotificationChannel(channel)
     notificationManager.notify(0, notification)
 }
-
-//fun bleConnection() {
-//    val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-//}
