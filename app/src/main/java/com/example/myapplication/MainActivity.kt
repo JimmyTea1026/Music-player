@@ -1,13 +1,13 @@
 package com.example.myapplication
 
+import BLEManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.renderscript.ScriptGroup.Input
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
@@ -35,8 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.PlayPage.PlayPageView
@@ -44,8 +44,6 @@ import com.example.myapplication.PlayPage.PlayPageViewModel
 import com.example.myapplication.SongList.SongListView
 import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -63,180 +61,196 @@ class MainActivity : ComponentActivity() {
                     6.轉橫向會壞掉
                     7.LiveDate 替換掉 LaunchedEffect
                  */
-                SongRepository.initSongList()
-                wifiConnection()
-//                LBTConnection()
+                SongRepository.initSongList(
+                    assetManager= LocalContext.current.assets)
                 showNavPage()
-                createCustomNotification()
+                createCustomNotification(this)
+//                startBLE()
+                startWifi()
             }
         }
     }
-    fun createCustomNotification(){
+    fun startBLE(){
+        val intent = Intent(this, BLEManager::class.java)
+        startActivity(intent)
+    }
+    fun startWifi(){
+        val intent = Intent(this, WifiManagerService::class.java)
+        startService(intent)
+    }
+
+    @Composable
+    fun showNavPage(){
+        val coroutineScope = rememberCoroutineScope()
+        val switchToMainPage = remember{ mutableStateOf(false) }
+
+        LaunchedEffect(Unit){
+            coroutineScope.launch {
+                delay(1000)
+                switchToMainPage.value = true
+            }
+        }
+        Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 1000),
+            label = "navToMain"
+        )
+        { switchPage ->
+            when(switchPage){
+                true -> mainPage()
+                false -> navPage()
+            }
+        }
+    }
+    @Composable
+    fun mainPage(
+        modifier: Modifier = Modifier
+    ) {
+        val songListView = SongListView
+        val songListViewModel = SongListViewModel
+        val playPageView = PlayPageView
+        val playPageViewModel = PlayPageViewModel
+
+        var switchToPlayPage by remember { mutableStateOf(false) }
+        LaunchedEffect(songListViewModel.onChangeSongIndex.value){
+            if(songListViewModel.onChangeSongIndex.value >= 0){
+                playPageViewModel.setSong(songListViewModel.onChangeSongIndex.value, true)
+                switchToPlayPage = true
+            }
+        }
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ){
+                Crossfade(targetState = switchToPlayPage, animationSpec = tween(durationMillis = 300),
+                    label = ""
+                )
+                { page ->
+                    when(page){
+                        false -> songListView.showPage()
+                        true -> playPageView.showPage()
+                    }
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ){
+                MenuBar(
+                    songListClicked = {switchToPlayPage = false},
+                    playClicked = {
+                        switchToPlayPage = true
+                    }
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun MenuBar(
+        songListClicked: () -> Unit,
+        playClicked: () -> Unit,
+        modifier: Modifier = Modifier
+    ){
+        Row(
+            modifier = Modifier
+                .height(70.dp)
+                .padding(horizontal = 3.dp, vertical = 10.dp)
+
+        ){
+            Button(
+                onClick = {  songListClicked()  },
+                modifier = Modifier
+                    .weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.DarkGray,
+                    contentColor = Color.White
+                ),
+            ) {
+                Text("Song List")
+            }
+            Button(
+                onClick = { playClicked() },
+                modifier = Modifier
+                    .weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.DarkGray,
+                    contentColor = Color.White
+                ),
+            ) {
+                Text("Now Playing")
+            }
+        }
+    }
+    @Composable
+    fun navPage(){
+        Surface(color = Color.Blue.copy(0.1f)) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ){
+                Image(
+                    painter = painterResource(id = R.drawable.spotify),
+                    contentDescription = "Icon",
+                    modifier = Modifier.size(300.dp),
+                )
+            }
+        }
+    }
+}
+
+fun createCustomNotification(context:Context){
 //        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 //        }
-        val artist = PlayPageViewModel.currentSong.getArtist()
-        val title = PlayPageViewModel.currentSong.getTitle()
-        val cover = PlayPageViewModel.currentSong.getCover()
+    val artist = PlayPageViewModel.currentSong.getArtist()
+    val title = PlayPageViewModel.currentSong.getTitle()
+    val cover = PlayPageViewModel.currentSong.getCover()
 
-        var playPauseIntent = Intent(this, MediaControlReceiver::class.java).apply {
-            action = "PLAY_PAUSE_ACTION"
-        }
-        val playPausePendingIntent = PendingIntent.getBroadcast(this, 0,
-            playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
-        val playPauseAction = Notification.Action(R.drawable.small_play, "", playPausePendingIntent)
+    var playPauseIntent = Intent(context, MediaControlReceiver::class.java).apply {
+        action = "PLAY_PAUSE_ACTION"
+    }
+    val playPausePendingIntent = PendingIntent.getBroadcast(context, 0,
+        playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
+    val playPauseAction = Notification.Action(R.drawable.small_play, "", playPausePendingIntent)
 
-        val nextIntent = Intent(this, MediaControlReceiver::class.java)
-        nextIntent.action = "NEXT_ACTION"
-        val nextPendingIntent = PendingIntent.getBroadcast(this, 0,
-            nextIntent, PendingIntent.FLAG_IMMUTABLE)
+    val nextIntent = Intent(context, MediaControlReceiver::class.java)
+    nextIntent.action = "NEXT_ACTION"
+    val nextPendingIntent = PendingIntent.getBroadcast(context, 0,
+        nextIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val preIntent = Intent(this, MediaControlReceiver::class.java)
-        preIntent.action = "NEXT_ACTION"
-        val prePendingIntent = PendingIntent.getBroadcast(this, 0,
-            preIntent, PendingIntent.FLAG_IMMUTABLE)
+    val preIntent = Intent(context, MediaControlReceiver::class.java)
+    preIntent.action = "NEXT_ACTION"
+    val prePendingIntent = PendingIntent.getBroadcast(context, 0,
+        preIntent, PendingIntent.FLAG_IMMUTABLE)
 
 
-        val channel = NotificationChannel("music", "MusicPlayer", NotificationManager.IMPORTANCE_LOW)
-        val builder = Notification.Builder(this, "music")
-        val notification = builder
-            .setSmallIcon(R.drawable.music)
-            .setContentTitle(title)
-            .setContentText(artist)
-            .setOngoing(true)
-            .setVisibility(Notification.VISIBILITY_PRIVATE)
-            .setLargeIcon(cover)
-            .addAction(R.drawable.pre, "Previous", prePendingIntent) // #0
-            .addAction(R.drawable.small_play, "Play/Pause", playPausePendingIntent) // #1
-            .addAction(R.drawable.next, "Next", nextPendingIntent) // #2
-            // Apply the media style template
+    val channel = NotificationChannel("music", "MusicPlayer", NotificationManager.IMPORTANCE_LOW)
+    val builder = Notification.Builder(context, "music")
+    val notification = builder
+        .setSmallIcon(R.drawable.music)
+        .setContentTitle(title)
+        .setContentText(artist)
+        .setOngoing(true)
+        .setVisibility(Notification.VISIBILITY_PRIVATE)
+        .setLargeIcon(cover)
+        .addAction(R.drawable.pre, "Previous", prePendingIntent) // #0
+        .addAction(R.drawable.small_play, "Play/Pause", playPausePendingIntent) // #1
+        .addAction(R.drawable.next, "Next", nextPendingIntent) // #2
+        // Apply the media style template
 //            .setStyle(MediaNotificationCompat.MediaStyle()
 //                .setShowActionsInCompactView(1 /* #1: pause button \*/)
 //                .setMediaSession(mediaSession.getSessionToken()))
-            .build()
+        .build()
 
-        val notificationManager = this.getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(channel)
-        notificationManager.notify(0, notification)
-    }
-}
-@Composable
-fun showNavPage(){
-    val coroutineScope = rememberCoroutineScope()
-    val switchToMainPage = remember{ mutableStateOf(false) }
-
-    LaunchedEffect(Unit){
-        coroutineScope.launch {
-            delay(1000)
-            switchToMainPage.value = true
-        }
-    }
-    Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 1000),
-        label = "navToMain"
-    )
-    { switchPage ->
-        when(switchPage){
-            true -> mainPage()
-            false -> navPage()
-        }
-    }
-}
-@Composable
-fun mainPage(
-    modifier: Modifier = Modifier
-) {
-    val songListView = SongListView
-    val songListViewModel = SongListViewModel
-    val playPageView = PlayPageView
-    val playPageViewModel = PlayPageViewModel
-    var switchToPlayPage by remember { mutableStateOf(false) }
-    LaunchedEffect(songListViewModel.onChangeSongIndex.value){
-        if(songListViewModel.onChangeSongIndex.value >= 0){
-            playPageViewModel.setSong(songListViewModel.onChangeSongIndex.value, true)
-            switchToPlayPage = true
-        }
-    }
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(16.dp)
-        ){
-            Crossfade(targetState = switchToPlayPage, animationSpec = tween(durationMillis = 300),
-                label = ""
-            )
-            { page ->
-                when(page){
-                    false -> songListView.showPage()
-                    true -> playPageView.showPage()
-                }
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-        ){
-            MenuBar(
-                songListClicked = {switchToPlayPage = false},
-                playClicked = {
-                    switchToPlayPage = true
-                }
-            )
-        }
-    }
+    val notificationManager = context.getSystemService(NotificationManager::class.java)
+    notificationManager.createNotificationChannel(channel)
+    notificationManager.notify(0, notification)
 }
 
-@Composable
-fun MenuBar(
-    songListClicked: () -> Unit,
-    playClicked: () -> Unit,
-    modifier: Modifier = Modifier
-){
-    Row(
-        modifier = Modifier
-            .height(70.dp)
-            .padding(horizontal = 3.dp, vertical = 10.dp)
-
-    ){
-        Button(
-            onClick = {  songListClicked()  },
-            modifier = Modifier
-                .weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.DarkGray,
-                contentColor = Color.White
-            ),
-        ) {
-            Text("Song List")
-        }
-        Button(
-            onClick = { playClicked() },
-            modifier = Modifier
-                .weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.DarkGray,
-                contentColor = Color.White
-            ),
-        ) {
-            Text("Now Playing")
-        }
-    }
-}
-@Composable
-fun navPage(){
-    Surface(color = Color.Blue.copy(0.1f)) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ){
-            Image(
-                painter = painterResource(id = R.drawable.spotify),
-                contentDescription = "Icon",
-                modifier = Modifier.size(300.dp),
-            )
-        }
-    }
-}
+//fun bleConnection() {
+//    val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+//}

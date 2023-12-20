@@ -1,14 +1,11 @@
 package com.example.myapplication
 
+import android.app.Service
+import android.content.Intent
+import android.os.IBinder
 import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import com.example.myapplication.PlayPage.PlayPageViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -17,14 +14,13 @@ import java.io.InputStreamReader
 import java.net.ServerSocket
 import java.net.Socket
 
-@Composable
-fun wifiConnection(){
-    fun createServer(): ServerSocket {
-        return ServerSocket(8888)
-    }
-    var serverSocket by remember { mutableStateOf<ServerSocket>(createServer()) }
-    val coroutineScope = rememberCoroutineScope()
-    LaunchedEffect(true){
+
+class WifiManagerService : Service() {
+    override fun onCreate() {
+        super.onCreate()
+        val serverSocket = ServerSocket(8888)
+        val coroutineScope = CoroutineScope(Dispatchers.Main)
+        Log.d("service","Wifi Service activate")
         coroutineScope.launch {
             withContext(Dispatchers.IO){
                 val clientSocket: Socket = serverSocket.accept()
@@ -40,19 +36,23 @@ fun wifiConnection(){
                 reader.close()
                 clientSocket.close()
                 serverSocket.close()
+                stopSelf()
+                Log.d("service","Wifi Service Shutdown")
             }
         }
     }
 
-}
-
-fun mediaPlayerController(cmd:String){
-    if(cmd == "p") {
-        if(PlayPageViewModel.mediaPlayer.isPlaying) PlayPageViewModel.mediaPlayerPause()
-        else PlayPageViewModel.mediaPlayerStart()
+    fun mediaPlayerController(cmd:String){
+        if(cmd == "p") {
+            if(PlayPageViewModel.mediaPlayer.isPlaying) PlayPageViewModel.mediaPlayerPause()
+            else PlayPageViewModel.mediaPlayerStart()
+        }
+        else if(cmd == "pre") PlayPageViewModel.setSong(-1)
+        else if(cmd == "next") PlayPageViewModel.setSong(1)
+        else if(cmd == "+15") PlayPageViewModel.setMediaPosition(15, true)
+        else if(cmd == "-15") PlayPageViewModel.setMediaPosition(-15, true)
     }
-    else if(cmd == "pre") PlayPageViewModel.setSong(-1)
-    else if(cmd == "next") PlayPageViewModel.setSong(1)
-    else if(cmd == "+15") PlayPageViewModel.setMediaPosition(15, true)
-    else if(cmd == "-15") PlayPageViewModel.setMediaPosition(-15, true)
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
 }
