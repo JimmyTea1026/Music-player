@@ -50,13 +50,15 @@ import com.example.myapplication.PlayPage.PlayPageViewModel
 import com.example.myapplication.SongList.SongListView
 import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var serviceConnection : ServiceConnection
-    private var songRepository = SongRepository
-    var musicBinder : MusicPlayerService.MusicBinder? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -92,6 +94,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun startMusicPlayerService(){
         val musicIntent = Intent(this, MusicPlayerService::class.java)
+        var musicBinder : MusicPlayerService.MusicBinder? = null
         serviceConnection = object : ServiceConnection{
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                 musicBinder = service as MusicPlayerService.MusicBinder
@@ -101,7 +104,9 @@ class MainActivity : ComponentActivity() {
                 musicBinder = null
             }
         }
+
         bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+
     }
     @Composable
     fun showNavPage(){

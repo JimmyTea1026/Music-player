@@ -9,6 +9,12 @@ import androidx.compose.runtime.mutableStateOf
 import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.PlayPage.PlayPageViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MusicPlayerService: Service() {
     private var mediaPlayer = MediaPlayer()
@@ -18,8 +24,14 @@ class MusicPlayerService: Service() {
     override fun onBind(intent: Intent?): IBinder {
         return MusicBinder()
     }
+
+    override fun onDestroy() {
+        mediaPlayer.release()
+        super.onDestroy()
+    }
     inner class MusicBinder : Binder(){
         private lateinit var nowPlayingObserver : ((Boolean)->Unit)
+        private var mediaPlayerJob: Job? = null
         fun getService(): MusicPlayerService {
             return this@MusicPlayerService
         }
@@ -31,18 +43,21 @@ class MusicPlayerService: Service() {
             setMediaPlayer(initialize)
         }
         private fun setMediaPlayer(initialize :Boolean = false){
+            mediaPlayerJob?.cancel()
             mediaPlayer.reset()
             mediaPlayerReady.value = false
-            mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
-            mediaPlayer.prepare()
-            mediaPlayer.setOnPreparedListener{
-                mediaPlayerReady.value = true
-                mediaPlayer.seekTo(0)
-                mediaStart()
-                if(initialize) mediaPause()
-            }
-            mediaPlayer.setOnCompletionListener {
-                PlayPageViewModel.setSong(1)
+
+            mediaPlayerJob = CoroutineScope(Dispatchers.Default).launch {
+                mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
+                mediaPlayer.prepareAsync()
+                mediaPlayer.setOnPreparedListener {
+                    mediaPlayerReady.value = true
+                    mediaStart()
+                    if (initialize) mediaPause()
+                }
+                mediaPlayer.setOnCompletionListener {
+                    PlayPageViewModel.setSong(1)
+                }
             }
         }
         fun setMediaPosition(newPos:Int, based:Boolean=false){
