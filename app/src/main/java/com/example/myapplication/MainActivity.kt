@@ -250,9 +250,9 @@ class MainActivity : ComponentActivity() {
 fun createCustomNotification(context:Context){
 //        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 //        }
-    val artist = PlayPageViewModel.currentSong.getArtist()
-    val title = PlayPageViewModel.currentSong.getTitle()
-    val cover = PlayPageViewModel.currentSong.getCover()
+    val artist = PlayPageViewModel.getCurrentSong().getArtist()
+    val title = PlayPageViewModel.getCurrentSong().getTitle()
+    val cover = PlayPageViewModel.getCurrentSong().getCover()
 
     var playPauseIntent = Intent(context, MediaControlReceiver::class.java).apply {
         action = "PLAY_PAUSE_ACTION"

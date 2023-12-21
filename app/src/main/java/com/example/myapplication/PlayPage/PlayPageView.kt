@@ -46,11 +46,16 @@ import kotlinx.coroutines.launch
 object PlayPageView {
     private val viewModel = PlayPageViewModel
     private val currentSongChanged = mutableStateOf(false)
+    private val nowPlaying = mutableStateOf(false)
     private val currentSongObserver: ()->Unit = {
         currentSongChanged.value = !currentSongChanged.value
     }
+    private val nowPlayingObserver: (Boolean)->Unit = {isPlaying->
+        nowPlaying.value = isPlaying
+    }
     init{
         viewModel.addCurrentSongObserver(currentSongObserver)
+        viewModel.addNowPlayingObserver(nowPlayingObserver)
     }
     @Composable
     fun showPage(
@@ -91,9 +96,9 @@ object PlayPageView {
     fun coverImage(
         modifier : Modifier = Modifier
     ){
-        var cover by remember { mutableStateOf<Bitmap>(viewModel.currentSong.getCover()) }
+        var cover by remember { mutableStateOf<Bitmap>(viewModel.getCurrentSong().getCover()) }
         LaunchedEffect(currentSongChanged.value){
-            cover = viewModel.currentSong.getCover()
+            cover = viewModel.getCurrentSong().getCover()
         }
 
         val coroutineScope = rememberCoroutineScope()
@@ -126,9 +131,9 @@ object PlayPageView {
         modifier : Modifier = Modifier,
         fontSize : Int
     ){
-        var currentSong by remember{ mutableStateOf(viewModel.currentSong) }
+        var currentSong by remember{ mutableStateOf(viewModel.getCurrentSong()) }
         LaunchedEffect(currentSongChanged.value){
-            currentSong = viewModel.currentSong
+            currentSong = viewModel.getCurrentSong()
         }
 
         Box(modifier = modifier){
@@ -181,19 +186,14 @@ object PlayPageView {
                     }
 
                     var isPlaying by remember{ mutableStateOf(true) }
-                    LaunchedEffect(key1 = viewModel.isPlaying.value){
-                        isPlaying = viewModel.isPlaying.value
+                    LaunchedEffect(key1 = nowPlaying.value){
+                        isPlaying = nowPlaying.value
                     }
                     IconToggleButton(
                         modifier = Modifier.weight(.1f),
                         checked = isPlaying,
                         onCheckedChange = {
-                            if(isPlaying) {
-                                viewModel.mediaPlayerPause()
-                            }
-                            else{
-                                viewModel.mediaPlayerStart()
-                            }
+                            viewModel.mediaPlayerStartPause()
                         },
                     ) {
                         val playIcon = painterResource(id = R.drawable.play)
@@ -228,11 +228,11 @@ object PlayPageView {
     ){
         var duration by remember { mutableStateOf(1) }
         var curPos by remember { mutableStateOf(0) }
-        LaunchedEffect(viewModel.isPlaying.value) {
+        LaunchedEffect(nowPlaying.value) {
             while (true) {
                 curPos = viewModel.getCurrentPosition()
                 duration = viewModel.getDuration()
-                delay(1000)
+                delay(500)
             }
         }
         var isUserChangingSlider by remember{ mutableStateOf(false) }

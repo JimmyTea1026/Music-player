@@ -8,12 +8,11 @@ import com.example.myapplication.Model.SongRepository
 object PlayPageViewModel{
     private var currentSongIndex = mutableStateOf(0)
     private var currentSongObserver: (()->Unit)? = null
+    private var nowPlayingObserver: ((Boolean)->Unit)? = null
     private var songList : ArrayList<Song>
-    private var duration = 0
-    var isPlaying = mutableStateOf(false)
-    var mediaPlayerReady = mutableStateOf(false)
+    private var currentSong : Song
+    private var mediaPlayerReady = mutableStateOf(false)
     var mediaPlayer = MediaPlayer()
-    var currentSong : Song
     init{
         songList = SongRepository.getSongList()
         currentSong = songList[currentSongIndex.value]
@@ -23,15 +22,16 @@ object PlayPageViewModel{
     fun addCurrentSongObserver(observer:()->Unit){
         currentSongObserver = observer
     }
+    fun addNowPlayingObserver(observer:(Boolean)->Unit){
+        nowPlayingObserver = observer
+    }
     fun setMediaPlayer(){
         mediaPlayer.reset()
         mediaPlayerReady.value = false
-        isPlaying.value = false
         mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
         mediaPlayer.prepare()
         mediaPlayer.setOnPreparedListener{
             mediaPlayerReady.value = true
-            duration = mediaPlayer.duration/1000
             mediaPlayer.seekTo(0)
             mediaPlayer.start()
             mediaPlayer.pause()
@@ -41,17 +41,19 @@ object PlayPageViewModel{
         }
 
     }
-    fun mediaPlayerStart(){
-        if(mediaPlayerReady.value) {
-            mediaPlayer.start()
-            isPlaying.value = true
+    fun mediaPlayerStartPause(){
+        if(mediaPlayerReady.value){
+            if(mediaPlayer.isPlaying) mediaPlayerPause()
+            else mediaPlayerStart()
         }
     }
+    fun mediaPlayerStart(){
+        mediaPlayer.start()
+        nowPlayingObserver?.invoke(mediaPlayer.isPlaying)
+    }
     fun mediaPlayerPause(){
-        if(mediaPlayerReady.value){
-            mediaPlayer.pause()
-            isPlaying.value = false
-        }
+        mediaPlayer.pause()
+        nowPlayingObserver?.invoke(mediaPlayer.isPlaying)
     }
     fun setSong(nextIdx:Int, setIdx:Boolean=false){
         if(mediaPlayerReady.value){
@@ -63,16 +65,18 @@ object PlayPageViewModel{
                 currentSongIndex.value = nextSong
                 currentSong = songList[currentSongIndex.value]
                 setMediaPlayer()
+                nowPlayingObserver?.invoke(mediaPlayer.isPlaying)
+                currentSongObserver?.invoke()
             }
-            currentSongObserver?.invoke()
         }
     }
     fun setMediaPosition(newPos:Int, based:Boolean=false){
         if(mediaPlayerReady.value) {
             val new = if(based) getCurrentPosition()+newPos else newPos
+            val duration = getDuration()
 
             if(new <= 0) mediaPlayer.seekTo(0)
-            else if(new >= duration) mediaPlayer.seekTo(duration*1000)
+            else if(new >= duration) mediaPlayer.seekTo(duration *1000)
             else mediaPlayer.seekTo(new*1000)
         }
     }
@@ -81,7 +85,10 @@ object PlayPageViewModel{
         else return 0
     }
     fun getDuration():Int{
-        if(mediaPlayerReady.value) return duration
+        if(mediaPlayerReady.value) return mediaPlayer.duration/1000
         else return 1
+    }
+    fun getCurrentSong():Song{
+        return currentSong
     }
 }
