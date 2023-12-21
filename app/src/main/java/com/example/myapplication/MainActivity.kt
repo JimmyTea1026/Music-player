@@ -62,8 +62,8 @@ class MainActivity : ComponentActivity() {
                 /* TODO:
                     1.通知欄
                     2.Service
-                    3.Wifi連接
-                    4.LBT
+                    3.Wifi連接 v
+                    4.LBT v
                     5.切換歌曲動畫
                     6.轉橫向會壞掉
                     7.LiveDate 替換掉 LaunchedEffect
