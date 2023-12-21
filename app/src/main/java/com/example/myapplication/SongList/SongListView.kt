@@ -32,15 +32,20 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
+import com.example.myapplication.PlayPage.PlayPageViewModel
 
 object SongListView{
     private var viewModel = SongListViewModel
     private val searchCandidateChanged = mutableStateOf(false)
     private val observer: ()->Unit = {searchCandidateChanged.value = !searchCandidateChanged.value}
-    private var songList = SongRepository.getSongList()
+    private lateinit var songList : ArrayList<Song>
     init{
         viewModel.addObserver(observer)
+    }
+    fun initSongList(){
+        songList = SongRepository.getSongList()
     }
     @Composable
     fun showPage(

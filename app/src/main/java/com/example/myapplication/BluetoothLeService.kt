@@ -47,7 +47,7 @@ class BluetoothLeService : Service() {
         bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = bluetoothManager?.adapter
 
-        Log.d("BLE", "BLE service activate")
+        Log.i("BLE", "BLE service activate")
     }
 
 
@@ -62,7 +62,7 @@ class BluetoothLeService : Service() {
             val deviceName = result.device.name
             deviceName?.let {
                 if (it == targetDevice) {
-                    Log.d("BLE", "Find Jimmyble")
+                    Log.i("BLE", "Find Jimmyble")
                     deviceAddress = result.device.address
                     bluetoothAdapter?.bluetoothLeScanner?.stopScan(this)
                     connectToDevice(deviceAddress!!)
@@ -80,7 +80,7 @@ class BluetoothLeService : Service() {
         val device = bluetoothAdapter?.getRemoteDevice(address)
         device?.let {
             bluetoothGatt = device.connectGatt(this, false, gattCallback)
-            Log.d("BLE", "Jimmyble connect successd")
+            Log.i("BLE", "Jimmyble connect successd")
         }
     }
 
@@ -92,7 +92,7 @@ class BluetoothLeService : Service() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             super.onConnectionStateChange(gatt, status, newState)
             if(newState == BluetoothProfile.STATE_CONNECTED){
-                Log.d("GATT", "Connected")
+                Log.i("GATT", "Connected")
                 gatt?.discoverServices()
             }
         }
@@ -116,7 +116,7 @@ class BluetoothLeService : Service() {
             if(characteristic.uuid == characteristicUUID){
                 val cmd = Arrays.toString(value)
                 mediaPlayerController(cmd)
-                Log.d("", cmd)
+                Log.i("", cmd)
             }
         }
 

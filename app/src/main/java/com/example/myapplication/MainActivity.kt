@@ -1,7 +1,6 @@
 package com.example.myapplication
 
 import android.app.Activity
-import com.example.myapplication.BluetoothLeService
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -12,7 +11,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Binder
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -44,13 +42,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.example.myapplication.Model.SongRepository
-import com.example.myapplication.PlayPage.MusicPlayerService
 import com.example.myapplication.PlayPage.PlayPageView
 import com.example.myapplication.PlayPage.PlayPageViewModel
 import com.example.myapplication.SongList.SongListView
@@ -61,6 +55,10 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var serviceConnection : ServiceConnection
+    private val songListViewModel = SongListViewModel
+    private val songListView = SongListView
+    private val playPageViewModel = PlayPageViewModel
+    private val playPageView = PlayPageView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -74,11 +72,10 @@ class MainActivity : ComponentActivity() {
                     6.轉橫向會壞掉
                     7.LiveDate 替換掉 LaunchedEffect
                  */
-                SongRepository.initSongList(
-                    assetManager= LocalContext.current.assets)
+                SongRepository.initSongList(this.assets)
                 showNavPage()
-                createCustomNotification(this)
                 requestPermissions()
+                startMusicPlayerService()
             }
         }
     }
@@ -88,16 +85,17 @@ class MainActivity : ComponentActivity() {
         unbindService(serviceConnection)
     }
 
-    fun startBLEService(){
-        val intent = Intent(this, BluetoothLeService::class.java)
-        startService(intent)
+    private fun startBLEService(){
+        val bleIntent = Intent(this, BluetoothLeService::class.java)
+        startService(bleIntent)
     }
-    fun startWifiService(){
-        val intent = Intent(this, WifiManagerService::class.java)
-        startService(intent)
+    private fun startWifiService(){
+        val wifiIntent = Intent(this, WifiManagerService::class.java)
+        startService(wifiIntent)
     }
-    fun startMusicPlayerService(){
-        val intent = Intent(this, MusicPlayerService::class.java)
+    private fun startMusicPlayerService(){
+        val musicIntent = Intent(this, MusicPlayerService::class.java)
+//        startService(musicIntent)
         serviceConnection = object : ServiceConnection{
             var musicBinder : MusicPlayerService.MusicBinder? = null
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -108,8 +106,7 @@ class MainActivity : ComponentActivity() {
                 musicBinder = null
             }
         }
-        startService(intent)
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
     @Composable
     fun showNavPage(){
@@ -134,11 +131,11 @@ class MainActivity : ComponentActivity() {
     }
     @Composable
     fun mainPage() {
-        val songListView = SongListView
-        val songListViewModel = SongListViewModel
-        val playPageView = PlayPageView
-        val playPageViewModel = PlayPageViewModel
-        startMusicPlayerService()
+        songListView.initSongList()
+        songListViewModel.initSongList()
+        playPageViewModel.initSongList()
+        createCustomNotification(this)
+
         var switchToPlayPage by remember { mutableStateOf(false) }
         LaunchedEffect(songListViewModel.onChangeSongIndex.value){
             if(songListViewModel.onChangeSongIndex.value >= 0){

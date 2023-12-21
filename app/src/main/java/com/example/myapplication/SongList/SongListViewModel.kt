@@ -2,15 +2,18 @@ package com.example.myapplication.SongList
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
 
 object SongListViewModel {
     private var observer: (()->Unit)? = null
-    private var songList = SongRepository.getSongList()
+    private lateinit var songList : ArrayList<Song>
     val candidate : MutableList<Int> = mutableListOf()
     val onChangeSongIndex : MutableState<Int> = mutableStateOf(-1)
     val changeSong:(Int) -> Unit = { songIndex-> onChangeSongIndex.value = songIndex }
-
+    fun initSongList(){
+        songList = SongRepository.getSongList()
+    }
     fun addObserver(observer: ()->Unit){
         this.observer = observer
     }

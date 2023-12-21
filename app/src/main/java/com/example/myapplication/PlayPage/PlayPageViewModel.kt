@@ -1,23 +1,24 @@
 package com.example.myapplication.PlayPage
 
-import android.content.Intent
 import android.media.MediaPlayer
-import android.os.Binder
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
+import com.example.myapplication.MusicPlayerService
 
 object PlayPageViewModel{
     private var currentSongIndex = mutableStateOf(0)
-    private var currentSongObserver: (()->Unit)? = null
-    private var nowPlayingObserver: ((Boolean)->Unit)? = null
-    private var songList : ArrayList<Song>
-    private var currentSong : Song
     private var mediaPlayerReady = mutableStateOf(false)
+    private lateinit var currentSongObserver: (()->Unit)
+    private lateinit var nowPlayingObserver: ((Boolean)->Unit)
+    private lateinit var songList : ArrayList<Song>
+    private lateinit var currentSong : Song
     private lateinit var musicBinder: MusicPlayerService.MusicBinder
     var mediaPlayer = MediaPlayer()
     init{
+
+    }
+    fun initSongList(){
         songList = SongRepository.getSongList()
         currentSong = songList[currentSongIndex.value]
         setMediaPlayer()
@@ -53,11 +54,11 @@ object PlayPageViewModel{
     }
     fun mediaPlayerStart(){
         mediaPlayer.start()
-        nowPlayingObserver?.invoke(mediaPlayer.isPlaying)
+        nowPlayingObserver.invoke(mediaPlayer.isPlaying)
     }
     fun mediaPlayerPause(){
         mediaPlayer.pause()
-        nowPlayingObserver?.invoke(mediaPlayer.isPlaying)
+        nowPlayingObserver.invoke(mediaPlayer.isPlaying)
     }
     fun setSong(nextIdx:Int, setIdx:Boolean=false){
         if(mediaPlayerReady.value){
@@ -69,8 +70,8 @@ object PlayPageViewModel{
                 currentSongIndex.value = nextSong
                 currentSong = songList[currentSongIndex.value]
                 setMediaPlayer()
-                nowPlayingObserver?.invoke(mediaPlayer.isPlaying)
-                currentSongObserver?.invoke()
+                nowPlayingObserver.invoke(mediaPlayer.isPlaying)
+                currentSongObserver.invoke()
             }
         }
     }
@@ -95,9 +96,7 @@ object PlayPageViewModel{
     fun getCurrentSong():Song{
         return currentSong
     }
-
     fun setBinder(binder : MusicPlayerService.MusicBinder){
         musicBinder = binder
-        musicBinder.test()
     }
 }

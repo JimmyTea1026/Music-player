@@ -20,15 +20,15 @@ class WifiManagerService : Service() {
         super.onCreate()
         val serverSocket = ServerSocket(8888)
         val coroutineScope = CoroutineScope(Dispatchers.Main)
-        Log.d("service","Wifi Service activate")
+        Log.i("service","Wifi Service activate")
         coroutineScope.launch {
             withContext(Dispatchers.IO){
                 val clientSocket: Socket = serverSocket.accept()
-                Log.d("", "Client connected: ${clientSocket.inetAddress}")
+                Log.i("", "Client connected: ${clientSocket.inetAddress}")
                 val reader = BufferedReader(InputStreamReader(clientSocket.getInputStream()))
                 while(true){
                     val message = reader.readLine()
-                    Log.d("收到訊息", message)
+                    Log.i("收到訊息", message)
                     if(message == "exit") break
                     else mediaPlayerController(message)
                 }
@@ -37,7 +37,7 @@ class WifiManagerService : Service() {
                 clientSocket.close()
                 serverSocket.close()
                 stopSelf()
-                Log.d("service","Wifi Service Shutdown")
+                Log.i("service","Wifi Service Shutdown")
             }
         }
     }
