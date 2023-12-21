@@ -91,9 +91,9 @@ object PlayPageView {
     fun coverImage(
         modifier : Modifier = Modifier
     ){
-        var cover by remember { mutableStateOf<Bitmap>(viewModel.getCurrentSong().getCover()) }
+        var cover by remember { mutableStateOf<Bitmap>(viewModel.getCurrentSong()!!.getCover()) }
         LaunchedEffect(currentSongChanged.value){
-            cover = viewModel.getCurrentSong().getCover()
+            cover = viewModel.getCurrentSong()!!.getCover()
         }
 
         val coroutineScope = rememberCoroutineScope()
@@ -134,7 +134,7 @@ object PlayPageView {
         Box(modifier = modifier){
             Column(modifier = modifier) {
                 Text(
-                    text = currentSong.getTitle(),
+                    text = currentSong!!.getTitle(),
                     style = TextStyle(fontSize = fontSize.sp),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -142,7 +142,7 @@ object PlayPageView {
                         .padding(top = 10.dp)
                 )
                 Text(
-                    text = currentSong.getArtist(),
+                    text = currentSong!!.getArtist(),
                     style = TextStyle(fontSize = (fontSize/2).sp),
                     fontWeight = FontWeight.Light,
                     textAlign = TextAlign.Center,

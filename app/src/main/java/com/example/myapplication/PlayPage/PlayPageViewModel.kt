@@ -8,9 +8,9 @@ import com.example.myapplication.MusicPlayerService
 
 object PlayPageViewModel{
     private var currentSongIndex = mutableStateOf(0)
+    private lateinit var currentSong : Song
     private lateinit var currentSongObserver: (()->Unit)
     private lateinit var songList : ArrayList<Song>
-    private lateinit var currentSong : Song
     private lateinit var musicBinder: MusicPlayerService.MusicBinder
     private val nowPlaying = mutableStateOf(false)
     private val nowPlayingObserver: (Boolean)->Unit = {isPlaying->
@@ -56,8 +56,8 @@ object PlayPageViewModel{
     fun getCurrentPosition(): Int{
         return musicBinder.getCurrentPosition()
     }
-    fun getCurrentSong():Song{
-        return currentSong
+    fun getCurrentSong():Song?{
+        return if(::currentSong.isInitialized) currentSong else null
     }
     fun getNowPlaying():MutableState<Boolean>{
         return nowPlaying

@@ -11,6 +11,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -44,15 +45,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
 import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.PlayPage.PlayPageView
 import com.example.myapplication.PlayPage.PlayPageViewModel
 import com.example.myapplication.SongList.SongListView
 import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -76,6 +75,7 @@ class MainActivity : ComponentActivity() {
                 showNavPage()
                 requestPermissions()
                 startMusicPlayerService()
+                createCustomNotification()
             }
         }
     }
@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
 
     }
     @Composable
-    fun showNavPage(){
+    private fun showNavPage(){
         val coroutineScope = rememberCoroutineScope()
         val switchToMainPage = remember{ mutableStateOf(false) }
 
@@ -135,8 +135,6 @@ class MainActivity : ComponentActivity() {
         val playPageViewModel by remember { mutableStateOf(PlayPageViewModel.initSongList())}
         val songListView = SongListView
         val playPageView = PlayPageView
-
-        createCustomNotification(this)
 
         var switchToPlayPage by remember { mutableStateOf(false) }
         LaunchedEffect(songListViewModel.onChangeSong.value){
@@ -180,11 +178,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun MenuBar(
-        songListClicked: () -> Unit,
-        playClicked: () -> Unit,
-        modifier: Modifier = Modifier
-    ){
+    fun MenuBar(songListClicked: () -> Unit, playClicked: () -> Unit,){
         Row(
             modifier = Modifier
                 .height(70.dp)
@@ -231,7 +225,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     private val requestMultiplePermissions =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
                 val granted = permissions.entries.all { it.value }
@@ -270,53 +263,50 @@ class MainActivity : ComponentActivity() {
         )
         requestMultiplePermissions.launch(permissions)
     }
-}
+    fun createCustomNotification(){
+        val currentSong = PlayPageViewModel.getCurrentSong()
+        val artist = currentSong?.getArtist() ?: "init"
+        val title = currentSong?.getTitle() ?: "init"
+        val cover = currentSong?.getCover() ?: "init"
 
-
-fun createCustomNotification(context:Context){
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+//        var playPauseIntent = Intent(this, MediaControlReceiver::class.java).apply {
+//            action = "PLAY_PAUSE_ACTION"
 //        }
-    val artist = PlayPageViewModel.getCurrentSong().getArtist()
-    val title = PlayPageViewModel.getCurrentSong().getTitle()
-    val cover = PlayPageViewModel.getCurrentSong().getCover()
-
-    var playPauseIntent = Intent(context, MediaControlReceiver::class.java).apply {
-        action = "PLAY_PAUSE_ACTION"
-    }
-    val playPausePendingIntent = PendingIntent.getBroadcast(context, 0,
-        playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
-    val playPauseAction = Notification.Action(R.drawable.small_play, "", playPausePendingIntent)
-
-    val nextIntent = Intent(context, MediaControlReceiver::class.java)
-    nextIntent.action = "NEXT_ACTION"
-    val nextPendingIntent = PendingIntent.getBroadcast(context, 0,
-        nextIntent, PendingIntent.FLAG_IMMUTABLE)
-
-    val preIntent = Intent(context, MediaControlReceiver::class.java)
-    preIntent.action = "NEXT_ACTION"
-    val prePendingIntent = PendingIntent.getBroadcast(context, 0,
-        preIntent, PendingIntent.FLAG_IMMUTABLE)
+//        val playPausePendingIntent = PendingIntent.getBroadcast(this, 0,
+//            playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
+//        val playPauseAction = Notification.Action(R.drawable.small_play, "", playPausePendingIntent)
+//
+//        val nextIntent = Intent(this, MediaControlReceiver::class.java)
+//        nextIntent.action = "NEXT_ACTION"
+//        val nextPendingIntent = PendingIntent.getBroadcast(this, 0,
+//            nextIntent, PendingIntent.FLAG_IMMUTABLE)
+//
+//        val preIntent = Intent(this, MediaControlReceiver::class.java)
+//        preIntent.action = "NEXT_ACTION"
+//        val prePendingIntent = PendingIntent.getBroadcast(this, 0,
+//            preIntent, PendingIntent.FLAG_IMMUTABLE)
 
 
-    val channel = NotificationChannel("music", "MusicPlayer", NotificationManager.IMPORTANCE_LOW)
-    val builder = Notification.Builder(context, "music")
-    val notification = builder
-        .setSmallIcon(R.drawable.music)
-        .setContentTitle(title)
-        .setContentText(artist)
-        .setOngoing(true)
-        .setVisibility(Notification.VISIBILITY_PRIVATE)
-        .setLargeIcon(cover)
-        .addAction(R.drawable.pre, "Previous", prePendingIntent) // #0
-        .addAction(R.drawable.small_play, "Play/Pause", playPausePendingIntent) // #1
-        .addAction(R.drawable.next, "Next", nextPendingIntent) // #2
-        // Apply the media style template
+        val channel = NotificationChannel("music", "MusicPlayer", NotificationManager.IMPORTANCE_LOW)
+        val builder = Notification.Builder(this, "music")
+        val notification = builder
+            .setSmallIcon(R.drawable.music)
+            .setContentTitle(title)
+            .setContentText(artist)
+            .setOngoing(true)
+            .setVisibility(Notification.VISIBILITY_PRIVATE)
+//            .setLargeIcon(cover)
+//            .addAction(R.drawable.pre, "Previous", prePendingIntent) // #0
+//            .addAction(R.drawable.small_play, "Play/Pause", playPausePendingIntent) // #1
+//            .addAction(R.drawable.next, "Next", nextPendingIntent) // #2
+            // Apply the media style template
 //            .setStyle(MediaNotificationCompat.MediaStyle()
 //                .setShowActionsInCompactView(1 /* #1: pause button \*/)
 //                .setMediaSession(mediaSession.getSessionToken()))
-        .build()
+            .build()
 
-    val notificationManager = context.getSystemService(NotificationManager::class.java)
-    notificationManager.createNotificationChannel(channel)
-    notificationManager.notify(0, notification)
+        val notificationManager = this.getSystemService(NotificationManager::class.java)
+        notificationManager.createNotificationChannel(channel)
+        notificationManager.notify(0, notification)
+    }
 }
