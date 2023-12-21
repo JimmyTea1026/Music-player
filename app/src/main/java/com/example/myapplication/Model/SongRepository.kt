@@ -14,7 +14,6 @@ object SongRepository {
     fun getSongList():ArrayList<Song>{
         return songList
     }
-
     fun initSongList(assetManager: AssetManager){
         this.assetManager = assetManager
         val path = "music"

@@ -1,7 +1,6 @@
 package com.example.myapplication.PlayPage
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -45,17 +44,13 @@ import kotlinx.coroutines.launch
 
 object PlayPageView {
     private val viewModel = PlayPageViewModel
-    private val currentSongChanged = mutableStateOf(false)
-    private val nowPlaying = mutableStateOf(false)
+    private val currentSongChanged = mutableStateOf(1)
     private val currentSongObserver: ()->Unit = {
-        currentSongChanged.value = !currentSongChanged.value
+        currentSongChanged.value += 1
     }
-    private val nowPlayingObserver: (Boolean)->Unit = {isPlaying->
-        nowPlaying.value = isPlaying
-    }
+
     init{
         viewModel.addCurrentSongObserver(currentSongObserver)
-        viewModel.addNowPlayingObserver(nowPlayingObserver)
     }
     @Composable
     fun showPage(
@@ -185,9 +180,9 @@ object PlayPageView {
                         )
                     }
 
-                    var isPlaying by remember{ mutableStateOf(true) }
-                    LaunchedEffect(key1 = nowPlaying.value){
-                        isPlaying = nowPlaying.value
+                    var isPlaying by remember{ mutableStateOf(false) }
+                    LaunchedEffect(key1 = viewModel.getNowPlaying().value){
+                        isPlaying = viewModel.getNowPlaying().value
                     }
                     IconToggleButton(
                         modifier = Modifier.weight(.1f),
@@ -228,7 +223,7 @@ object PlayPageView {
     ){
         var duration by remember { mutableStateOf(1) }
         var curPos by remember { mutableStateOf(0) }
-        LaunchedEffect(nowPlaying.value) {
+        LaunchedEffect(viewModel.getNowPlaying().value) {
             while (true) {
                 curPos = viewModel.getCurrentPosition()
                 duration = viewModel.getDuration()
@@ -246,7 +241,7 @@ object PlayPageView {
                     onValueChange = {newValue ->
                         curPos = (newValue*duration).toInt()
                         sliderValue = newValue
-                        if(viewModel.mediaPlayer.isPlaying) playingWhenChange = true
+                        if(viewModel.getNowPlaying().value) playingWhenChange = true
                         isUserChangingSlider = true
                         viewModel.mediaPlayerPause()
                     },

@@ -40,12 +40,8 @@ object SongListView{
     private var viewModel = SongListViewModel
     private val searchCandidateChanged = mutableStateOf(false)
     private val observer: ()->Unit = {searchCandidateChanged.value = !searchCandidateChanged.value}
-    private lateinit var songList : ArrayList<Song>
     init{
         viewModel.addObserver(observer)
-    }
-    fun initSongList(){
-        songList = SongRepository.getSongList()
     }
     @Composable
     fun showPage(
@@ -101,6 +97,7 @@ object SongListView{
     fun showSongList(
         modifier: Modifier = Modifier,
     ){
+        val songList = viewModel.songList
         val candidate by remember { mutableStateOf(viewModel.candidate) }
         LaunchedEffect(searchCandidateChanged.value) {
             candidate.clear()
@@ -118,7 +115,7 @@ object SongListView{
                         .padding(vertical = 4.dp, horizontal = 8.dp)
                         .height(75.dp)
                         .clickable {
-                            viewModel.changeSong(index)
+                            viewModel.onSongClicked(index)
                         }
                 ) {
                     Row (

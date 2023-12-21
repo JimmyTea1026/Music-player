@@ -7,12 +7,17 @@ import com.example.myapplication.Model.SongRepository
 
 object SongListViewModel {
     private var observer: (()->Unit)? = null
-    private lateinit var songList : ArrayList<Song>
-    val candidate : MutableList<Int> = mutableListOf()
+    lateinit var songList : ArrayList<Song>
     val onChangeSongIndex : MutableState<Int> = mutableStateOf(-1)
-    val changeSong:(Int) -> Unit = { songIndex-> onChangeSongIndex.value = songIndex }
-    fun initSongList(){
+    val onChangeSong : MutableState<Boolean> = mutableStateOf(false)
+    val onSongClicked:(Int) -> Unit = { songIndex->
+        onChangeSongIndex.value = songIndex
+        onChangeSong.value = !onChangeSong.value
+    }
+    val candidate : MutableList<Int> = mutableListOf()
+    fun initSongList(): SongListViewModel{
         songList = SongRepository.getSongList()
+        return this@SongListViewModel
     }
     fun addObserver(observer: ()->Unit){
         this.observer = observer

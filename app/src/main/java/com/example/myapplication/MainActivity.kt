@@ -55,17 +55,15 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var serviceConnection : ServiceConnection
-    private val songListViewModel = SongListViewModel
-    private val songListView = SongListView
-    private val playPageViewModel = PlayPageViewModel
-    private val playPageView = PlayPageView
+    private var songRepository = SongRepository
+    var musicBinder : MusicPlayerService.MusicBinder? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
                 /* TODO:
                     1.通知欄
-                    2.Service
+                    2.Service v
                     3.Wifi連接 v
                     4.LBT v
                     5.切換歌曲動畫
@@ -84,7 +82,6 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         unbindService(serviceConnection)
     }
-
     private fun startBLEService(){
         val bleIntent = Intent(this, BluetoothLeService::class.java)
         startService(bleIntent)
@@ -95,9 +92,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun startMusicPlayerService(){
         val musicIntent = Intent(this, MusicPlayerService::class.java)
-//        startService(musicIntent)
         serviceConnection = object : ServiceConnection{
-            var musicBinder : MusicPlayerService.MusicBinder? = null
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                 musicBinder = service as MusicPlayerService.MusicBinder
                 PlayPageViewModel.setBinder(musicBinder!!)
@@ -131,13 +126,15 @@ class MainActivity : ComponentActivity() {
     }
     @Composable
     fun mainPage() {
-        songListView.initSongList()
-        songListViewModel.initSongList()
-        playPageViewModel.initSongList()
+        val songListViewModel by remember { mutableStateOf(SongListViewModel.initSongList())}
+        val playPageViewModel by remember { mutableStateOf(PlayPageViewModel.initSongList())}
+        val songListView = SongListView
+        val playPageView = PlayPageView
+
         createCustomNotification(this)
 
         var switchToPlayPage by remember { mutableStateOf(false) }
-        LaunchedEffect(songListViewModel.onChangeSongIndex.value){
+        LaunchedEffect(songListViewModel.onChangeSong.value){
             if(songListViewModel.onChangeSongIndex.value >= 0){
                 playPageViewModel.setSong(songListViewModel.onChangeSongIndex.value, true)
                 switchToPlayPage = true
