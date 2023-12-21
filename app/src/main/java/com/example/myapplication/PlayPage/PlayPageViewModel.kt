@@ -1,7 +1,10 @@
 package com.example.myapplication.PlayPage
 
+import android.content.Intent
 import android.media.MediaPlayer
+import android.os.Binder
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
 
@@ -12,6 +15,7 @@ object PlayPageViewModel{
     private var songList : ArrayList<Song>
     private var currentSong : Song
     private var mediaPlayerReady = mutableStateOf(false)
+    private lateinit var musicBinder: MusicPlayerService.MusicBinder
     var mediaPlayer = MediaPlayer()
     init{
         songList = SongRepository.getSongList()
@@ -90,5 +94,10 @@ object PlayPageViewModel{
     }
     fun getCurrentSong():Song{
         return currentSong
+    }
+
+    fun setBinder(binder : MusicPlayerService.MusicBinder){
+        musicBinder = binder
+        musicBinder.test()
     }
 }

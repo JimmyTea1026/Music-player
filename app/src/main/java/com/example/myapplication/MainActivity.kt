@@ -8,9 +8,13 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Binder
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -46,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.myapplication.Model.SongRepository
+import com.example.myapplication.PlayPage.MusicPlayerService
 import com.example.myapplication.PlayPage.PlayPageView
 import com.example.myapplication.PlayPage.PlayPageViewModel
 import com.example.myapplication.SongList.SongListView
@@ -55,6 +60,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private lateinit var serviceConnection : ServiceConnection
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -76,13 +82,34 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    fun startBLE(){
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unbindService(serviceConnection)
+    }
+
+    fun startBLEService(){
         val intent = Intent(this, BluetoothLeService::class.java)
         startService(intent)
     }
-    fun startWifi(){
+    fun startWifiService(){
         val intent = Intent(this, WifiManagerService::class.java)
         startService(intent)
+    }
+    fun startMusicPlayerService(){
+        val intent = Intent(this, MusicPlayerService::class.java)
+        serviceConnection = object : ServiceConnection{
+            var musicBinder : MusicPlayerService.MusicBinder? = null
+            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                musicBinder = service as MusicPlayerService.MusicBinder
+                PlayPageViewModel.setBinder(musicBinder!!)
+            }
+            override fun onServiceDisconnected(name: ComponentName?) {
+                musicBinder = null
+            }
+        }
+        startService(intent)
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
     @Composable
     fun showNavPage(){
@@ -111,7 +138,7 @@ class MainActivity : ComponentActivity() {
         val songListViewModel = SongListViewModel
         val playPageView = PlayPageView
         val playPageViewModel = PlayPageViewModel
-
+        startMusicPlayerService()
         var switchToPlayPage by remember { mutableStateOf(false) }
         LaunchedEffect(songListViewModel.onChangeSongIndex.value){
             if(songListViewModel.onChangeSongIndex.value >= 0){
@@ -211,8 +238,8 @@ class MainActivity : ComponentActivity() {
                 val granted = permissions.entries.all { it.value }
                 if (granted) {
                     Log.d("Permission", "Get all permission")
-                    startBLE()
-                    startWifi()
+                    startBLEService()
+                    startWifiService()
                 } else {
                     Log.d("Permission", "no permission")
                 }
