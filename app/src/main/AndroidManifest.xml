@@ -48,6 +48,10 @@
             android:name=".MusicPlayerService"
             android:enabled="true"
             android:exported="false" />
+        <service
+            android:name=".NotificationControllerService"
+            android:enabled="true"
+            android:exported="false" />
 
     </application>
 

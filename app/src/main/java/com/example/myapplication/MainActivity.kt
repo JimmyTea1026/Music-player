@@ -57,7 +57,6 @@ import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import NotificationControllerService
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
@@ -289,21 +288,21 @@ class MainActivity : ComponentActivity() {
         val mediaSession = MediaSessionCompat(this, "tag")
 
         val playPauseIntent = Intent(this, NotificationControllerService::class.java).apply { action = "PLAY_PAUSE_ACTION" }
-        val playPausePendingIntent = PendingIntent.getBroadcast(this, 0, playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
+        val playPausePendingIntent = PendingIntent.getService(this, 0, playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
         val playPauseAction = NotificationCompat.Action.Builder(
             R.drawable.small_play,
             "Play/Pause",
             playPausePendingIntent
         ).build()
         val preSongIntent = Intent(this, NotificationControllerService::class.java).apply { action = "PRE_ACTION" }
-        val preSongPendingIntent = PendingIntent.getBroadcast(this, 1, preSongIntent, PendingIntent.FLAG_IMMUTABLE)
+        val preSongPendingIntent = PendingIntent.getService(this, 1, preSongIntent, PendingIntent.FLAG_IMMUTABLE)
         val preSongAction = NotificationCompat.Action.Builder(
             R.drawable.pre,
             "Play/Pause",
             preSongPendingIntent
         ).build()
         val nextSongIntent = Intent(this, NotificationControllerService::class.java).apply { action = "NEXT_ACTION" }
-        val nextSongPendingIntent = PendingIntent.getBroadcast(this, 2, nextSongIntent, PendingIntent.FLAG_IMMUTABLE)
+        val nextSongPendingIntent = PendingIntent.getService(this, 2, nextSongIntent, PendingIntent.FLAG_IMMUTABLE)
         val nextSongAction = NotificationCompat.Action.Builder(
             R.drawable.next,
             "Play/Pause",

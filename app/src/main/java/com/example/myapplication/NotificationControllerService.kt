@@ -1,3 +1,5 @@
+package com.example.myapplication
+
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
@@ -11,13 +13,15 @@ class NotificationControllerService : Service() {
             when (intent.action) {
                 "PLAY_PAUSE_ACTION" -> {
                     Log.i("","playPause")
-//                    viewModel.togglePlayback() // 在 ViewModel 中控制播放/暫停
+                    viewModel.mediaPlayerStartPause()
                 }
                 "PRE_ACTION" -> {
                     Log.i("", "PRE")
+                    viewModel.setSong(-1)
                 }
                 "NEXT_ACTION" -> {
                     Log.i("", "NEXT")
+                    viewModel.setSong(1)
                 }
                 else -> {}
             }
