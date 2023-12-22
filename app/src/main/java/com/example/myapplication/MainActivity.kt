@@ -1,7 +1,6 @@
 package com.example.myapplication
 
 import android.app.Activity
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -11,9 +10,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -46,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationCompat
+import androidx.media.app.NotificationCompat.MediaStyle
 import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.PlayPage.PlayPageView
 import com.example.myapplication.PlayPage.PlayPageViewModel
@@ -54,10 +57,12 @@ import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import NotificationControllerService
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     private lateinit var serviceConnection : ServiceConnection
-
+    private lateinit var notificationManager : NotificationManager
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -142,6 +147,9 @@ class MainActivity : ComponentActivity() {
                 playPageViewModel.setSong(songListViewModel.onChangeSongIndex.value, true)
                 switchToPlayPage = true
             }
+        }
+        LaunchedEffect(playPageViewModel.getCurrentSongIndex().value){
+            updateNotification()
         }
         Column(
             modifier = Modifier.fillMaxSize()
@@ -263,50 +271,82 @@ class MainActivity : ComponentActivity() {
         )
         requestMultiplePermissions.launch(permissions)
     }
-    fun createCustomNotification(){
+
+    private fun createCustomNotification(){
+        val channelId = "music_channel"
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, "MusicPlayer", NotificationManager.IMPORTANCE_HIGH)
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+    private fun updateNotification(){
         val currentSong = PlayPageViewModel.getCurrentSong()
-        val artist = currentSong?.getArtist() ?: "init"
-        val title = currentSong?.getTitle() ?: "init"
-        val cover = currentSong?.getCover() ?: "init"
+        val artist = currentSong.getArtist()
+        val title = currentSong.getTitle()
+        var cover = currentSong.getCover()
+        val builder = NotificationCompat.Builder(this, "music")
+        val mediaSession = MediaSessionCompat(this, "tag")
 
-//        var playPauseIntent = Intent(this, MediaControlReceiver::class.java).apply {
-//            action = "PLAY_PAUSE_ACTION"
-//        }
-//        val playPausePendingIntent = PendingIntent.getBroadcast(this, 0,
-//            playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
-//        val playPauseAction = Notification.Action(R.drawable.small_play, "", playPausePendingIntent)
-//
-//        val nextIntent = Intent(this, MediaControlReceiver::class.java)
-//        nextIntent.action = "NEXT_ACTION"
-//        val nextPendingIntent = PendingIntent.getBroadcast(this, 0,
-//            nextIntent, PendingIntent.FLAG_IMMUTABLE)
-//
-//        val preIntent = Intent(this, MediaControlReceiver::class.java)
-//        preIntent.action = "NEXT_ACTION"
-//        val prePendingIntent = PendingIntent.getBroadcast(this, 0,
-//            preIntent, PendingIntent.FLAG_IMMUTABLE)
+        val playPauseIntent = Intent(this, NotificationControllerService::class.java).apply { action = "PLAY_PAUSE_ACTION" }
+        val playPausePendingIntent = PendingIntent.getBroadcast(this, 0, playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
+        val playPauseAction = NotificationCompat.Action.Builder(
+            R.drawable.small_play,
+            "Play/Pause",
+            playPausePendingIntent
+        ).build()
+        val preSongIntent = Intent(this, NotificationControllerService::class.java).apply { action = "PRE_ACTION" }
+        val preSongPendingIntent = PendingIntent.getBroadcast(this, 1, preSongIntent, PendingIntent.FLAG_IMMUTABLE)
+        val preSongAction = NotificationCompat.Action.Builder(
+            R.drawable.pre,
+            "Play/Pause",
+            preSongPendingIntent
+        ).build()
+        val nextSongIntent = Intent(this, NotificationControllerService::class.java).apply { action = "NEXT_ACTION" }
+        val nextSongPendingIntent = PendingIntent.getBroadcast(this, 2, nextSongIntent, PendingIntent.FLAG_IMMUTABLE)
+        val nextSongAction = NotificationCompat.Action.Builder(
+            R.drawable.next,
+            "Play/Pause",
+            nextSongPendingIntent
+        ).build()
 
-
-        val channel = NotificationChannel("music", "MusicPlayer", NotificationManager.IMPORTANCE_LOW)
-        val builder = Notification.Builder(this, "music")
         val notification = builder
             .setSmallIcon(R.drawable.music)
             .setContentTitle(title)
             .setContentText(artist)
             .setOngoing(true)
-            .setVisibility(Notification.VISIBILITY_PRIVATE)
-//            .setLargeIcon(cover)
-//            .addAction(R.drawable.pre, "Previous", prePendingIntent) // #0
-//            .addAction(R.drawable.small_play, "Play/Pause", playPausePendingIntent) // #1
-//            .addAction(R.drawable.next, "Next", nextPendingIntent) // #2
-            // Apply the media style template
-//            .setStyle(MediaNotificationCompat.MediaStyle()
-//                .setShowActionsInCompactView(1 /* #1: pause button \*/)
-//                .setMediaSession(mediaSession.getSessionToken()))
-            .build()
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setLargeIcon(cover)
+            .setStyle(
+                MediaStyle()
+                    .setShowActionsInCompactView(0,1,2) // 在壓縮視圖中顯示的操作按鈕索引
+                    .setMediaSession(mediaSession.sessionToken)
+            )
+            .addAction(preSongAction)
+            .addAction(playPauseAction)
+            .addAction(nextSongAction)
 
-        val notificationManager = this.getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(channel)
-        notificationManager.notify(0, notification)
+        notificationManager.notify(0, notification.build())
+    }
+    fun resizeBitmap(bitmap: Bitmap, desiredWidthDp: Int, desiredHeightDp: Int): Bitmap {
+        val desiredWidth = desiredWidthDp.dpToPx().toFloat()
+        val desiredHeight = desiredHeightDp.dpToPx().toFloat()
+
+        val width = bitmap.width.toFloat()
+        val height = bitmap.height.toFloat()
+
+        val scale = if (width > height) desiredWidth / width else desiredHeight / height
+
+        val matrix = Matrix()
+        matrix.postScale(scale, scale)
+
+        val newBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+
+        return newBitmap
+    }
+
+    fun Int.dpToPx(): Int {
+        val density = resources.displayMetrics.density
+        return (this * density).roundToInt()
     }
 }

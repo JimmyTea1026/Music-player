@@ -7,7 +7,7 @@ import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.MusicPlayerService
 
 object PlayPageViewModel{
-    private var currentSongIndex = mutableStateOf(0)
+    private var currentSongIndex = mutableStateOf(-1)
     private lateinit var currentSong : Song
     private lateinit var currentSongObserver: (()->Unit)
     private lateinit var songList : ArrayList<Song>
@@ -18,6 +18,7 @@ object PlayPageViewModel{
     }
     fun initSongList():PlayPageViewModel{
         songList = SongRepository.getSongList()
+        currentSongIndex.value = 0
         currentSong = songList[currentSongIndex.value]
         musicBinder.setCurrentSong(currentSong, initialize = true)
         return this@PlayPageViewModel
@@ -56,8 +57,11 @@ object PlayPageViewModel{
     fun getCurrentPosition(): Int{
         return musicBinder.getCurrentPosition()
     }
-    fun getCurrentSong():Song?{
-        return if(::currentSong.isInitialized) currentSong else null
+    fun getCurrentSong():Song{
+        return currentSong
+    }
+    fun getCurrentSongIndex():MutableState<Int>{
+        return currentSongIndex
     }
     fun getNowPlaying():MutableState<Boolean>{
         return nowPlaying
