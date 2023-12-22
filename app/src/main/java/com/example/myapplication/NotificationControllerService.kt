@@ -23,6 +23,14 @@ class NotificationControllerService : Service() {
                     Log.i("", "NEXT")
                     viewModel.setSong(1)
                 }
+                "+15_SECOND" -> {
+                    Log.i("", "+15")
+                    viewModel.setMediaPosition(15, true)
+                }
+                "-15_SECOND" -> {
+                    Log.i("", "-15")
+                    viewModel.setMediaPosition(-15, true)
+                }
                 else -> {}
             }
         }

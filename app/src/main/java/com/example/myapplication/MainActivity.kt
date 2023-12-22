@@ -298,15 +298,29 @@ class MainActivity : ComponentActivity() {
         val preSongPendingIntent = PendingIntent.getService(this, 1, preSongIntent, PendingIntent.FLAG_IMMUTABLE)
         val preSongAction = NotificationCompat.Action.Builder(
             R.drawable.pre,
-            "Play/Pause",
+            "preSong",
             preSongPendingIntent
         ).build()
         val nextSongIntent = Intent(this, NotificationControllerService::class.java).apply { action = "NEXT_ACTION" }
         val nextSongPendingIntent = PendingIntent.getService(this, 2, nextSongIntent, PendingIntent.FLAG_IMMUTABLE)
         val nextSongAction = NotificationCompat.Action.Builder(
             R.drawable.next,
-            "Play/Pause",
+            "nextSong",
             nextSongPendingIntent
+        ).build()
+        val plus15SecIntent = Intent(this, NotificationControllerService::class.java).apply { action = "+15_SECOND" }
+        val plus15SecPendingIntent = PendingIntent.getService(this, 3, plus15SecIntent, PendingIntent.FLAG_IMMUTABLE)
+        val plus15SecAction = NotificationCompat.Action.Builder(
+            R.drawable.plus15,
+            "+15",
+            plus15SecPendingIntent
+        ).build()
+        val minus15SecIntent = Intent(this, NotificationControllerService::class.java).apply { action = "-15_SECOND" }
+        val minus15SecPendingIntent = PendingIntent.getService(this, 4, minus15SecIntent, PendingIntent.FLAG_IMMUTABLE)
+        val minus15SecAction = NotificationCompat.Action.Builder(
+            R.drawable.minus15,
+            "-15",
+            minus15SecPendingIntent
         ).build()
 
         val notification = builder
@@ -321,31 +335,12 @@ class MainActivity : ComponentActivity() {
                     .setShowActionsInCompactView(0,1,2) // 在壓縮視圖中顯示的操作按鈕索引
                     .setMediaSession(mediaSession.sessionToken)
             )
+            .addAction(minus15SecAction)
             .addAction(preSongAction)
             .addAction(playPauseAction)
             .addAction(nextSongAction)
+            .addAction(plus15SecAction)
 
         notificationManager.notify(0, notification.build())
-    }
-    fun resizeBitmap(bitmap: Bitmap, desiredWidthDp: Int, desiredHeightDp: Int): Bitmap {
-        val desiredWidth = desiredWidthDp.dpToPx().toFloat()
-        val desiredHeight = desiredHeightDp.dpToPx().toFloat()
-
-        val width = bitmap.width.toFloat()
-        val height = bitmap.height.toFloat()
-
-        val scale = if (width > height) desiredWidth / width else desiredHeight / height
-
-        val matrix = Matrix()
-        matrix.postScale(scale, scale)
-
-        val newBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-
-        return newBitmap
-    }
-
-    fun Int.dpToPx(): Int {
-        val density = resources.displayMetrics.density
-        return (this * density).roundToInt()
     }
 }
