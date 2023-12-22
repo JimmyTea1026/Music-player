@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 /* TODO:
-                    1.通知欄
+                    1.通知欄 v
                     2.Service v
                     3.Wifi連接 v
                     4.LBT v

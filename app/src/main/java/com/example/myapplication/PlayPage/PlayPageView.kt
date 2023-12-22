@@ -1,6 +1,7 @@
 package com.example.myapplication.PlayPage
 
 import android.graphics.Bitmap
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -91,34 +93,36 @@ object PlayPageView {
     fun coverImage(
         modifier : Modifier = Modifier
     ){
-        var cover by remember { mutableStateOf<Bitmap>(viewModel.getCurrentSong()!!.getCover()) }
+        var cover by remember { mutableStateOf<Bitmap>(viewModel.getCurrentSong().getCover()) }
         LaunchedEffect(currentSongChanged.value){
-            cover = viewModel.getCurrentSong()!!.getCover()
+            cover = viewModel.getCurrentSong().getCover()
         }
 
         val coroutineScope = rememberCoroutineScope()
-        var lastEventTimestamp by remember{ mutableStateOf(0L) }
-        Box(modifier = modifier
-        ) {
-            Image(
-                bitmap = cover.asImageBitmap(),
-                contentDescription = "Icon",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(Unit) {
-                        detectTransformGestures { _, pan, _, _ ->
-                            val currentTimestamp = System.currentTimeMillis()
-                            if (currentTimestamp - lastEventTimestamp > 100L) {
-                                lastEventTimestamp = currentTimestamp
-                                coroutineScope.launch {
-                                    delay(200)
-                                    if (pan.x > 50) viewModel.setSong(-1)
-                                    else if (pan.x < -50) viewModel.setSong(1)
+        var lastEventTimestamp by remember{ mutableLongStateOf(0L) }
+        Crossfade(targetState = cover, label = "changeSong") { nextCover->
+            Box(modifier = modifier
+            ) {
+                Image(
+                    bitmap = nextCover.asImageBitmap(),
+                    contentDescription = "Icon",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTransformGestures { _, pan, _, _ ->
+                                val currentTimestamp = System.currentTimeMillis()
+                                if (currentTimestamp - lastEventTimestamp > 100L) {
+                                    lastEventTimestamp = currentTimestamp
+                                    coroutineScope.launch {
+                                        delay(200)
+                                        if (pan.x > 50) viewModel.setSong(-1)
+                                        else if (pan.x < -50) viewModel.setSong(1)
+                                    }
                                 }
                             }
                         }
-                    }
-            )
+                )
+            }
         }
     }
     @Composable
@@ -130,26 +134,27 @@ object PlayPageView {
         LaunchedEffect(currentSongChanged.value){
             currentSong = viewModel.getCurrentSong()
         }
-
-        Box(modifier = modifier){
-            Column(modifier = modifier) {
-                Text(
-                    text = currentSong!!.getTitle(),
-                    style = TextStyle(fontSize = fontSize.sp),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp)
-                )
-                Text(
-                    text = currentSong!!.getArtist(),
-                    style = TextStyle(fontSize = (fontSize/2).sp),
-                    fontWeight = FontWeight.Light,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp)
-                )
+        Box(modifier = modifier) {
+            Crossfade(targetState = currentSong, label = "changeSong") { song ->
+                Column(modifier = modifier) {
+                    Text(
+                        text = song.getTitle(),
+                        style = TextStyle(fontSize = fontSize.sp),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp)
+                    )
+                    Text(
+                        text = song.getArtist(),
+                        style = TextStyle(fontSize = (fontSize / 2).sp),
+                        fontWeight = FontWeight.Light,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp)
+                    )
+                }
             }
         }
     }
@@ -227,7 +232,7 @@ object PlayPageView {
             while (true) {
                 curPos = viewModel.getCurrentPosition()
                 duration = viewModel.getDuration()
-                delay(1000)
+                delay(500)
             }
         }
         var isUserChangingSlider by remember{ mutableStateOf(false) }
