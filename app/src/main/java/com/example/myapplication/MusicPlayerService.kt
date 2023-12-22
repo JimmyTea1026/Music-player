@@ -32,6 +32,7 @@ class MusicPlayerService: Service() {
     inner class MusicBinder : Binder(){
         private lateinit var nowPlayingObserver : ((Boolean)->Unit)
         private var mediaPlayerJob: Job? = null
+        private var lastRequestTime: Long = 0
         fun getService(): MusicPlayerService {
             return this@MusicPlayerService
         }
@@ -43,13 +44,17 @@ class MusicPlayerService: Service() {
             setMediaPlayer(initialize)
         }
         private fun setMediaPlayer(initialize :Boolean = false){
+            val curretTime = System.currentTimeMillis()
+            if(curretTime - lastRequestTime < 1000) return
+            lastRequestTime = curretTime
+
             mediaPlayerJob?.cancel()
             mediaPlayer.reset()
             mediaPlayerReady.value = false
 
             mediaPlayerJob = CoroutineScope(Dispatchers.Default).launch {
                 mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
-                mediaPlayer.prepareAsync()
+                mediaPlayer.prepare()
                 mediaPlayer.setOnPreparedListener {
                     mediaPlayerReady.value = true
                     mediaStart()
