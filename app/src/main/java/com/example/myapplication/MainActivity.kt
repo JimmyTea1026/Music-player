@@ -71,13 +71,13 @@ class MainActivity : ComponentActivity() {
                     2.Service v
                     3.Wifi連接 v
                     4.LBT v
-                    5.切換歌曲動畫
+                    5.切換歌曲動畫 v
                     6.轉橫向會壞掉
                     7.LiveDate 替換掉 LaunchedEffect
                  */
                 SongRepository.initSongList(this.assets)
                 showNavPage()
-                requestPermissions()
+                activateService()
                 startMusicPlayerService()
                 createCustomNotification()
             }
@@ -237,29 +237,25 @@ class MainActivity : ComponentActivity() {
                 val granted = permissions.entries.all { it.value }
                 if (granted) {
                     Log.d("Permission", "Get all permission")
-                    startBLEService()
                     startWifiService()
                 } else {
                     Log.d("Permission", "no permission")
                 }
             }
 
+
     private val requestEnableBt =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 Log.d("Bluetooth", "Bluetooth ON")
+                startBLEService()
             } else {
                 Log.d("Bluetooth", "Bluetooth off")
             }
         }
-    private fun requestPermissions() {
+    private fun activateService() {
         val bluetoothmanager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothmanager.adapter
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            requestEnableBt.launch(enableBtIntent)
-        }
-
         val permissions = arrayOf(
             android.Manifest.permission.BLUETOOTH,
             android.Manifest.permission.BLUETOOTH_ADMIN,
@@ -269,10 +265,14 @@ class MainActivity : ComponentActivity() {
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
         )
         requestMultiplePermissions.launch(permissions)
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            requestEnableBt.launch(enableBtIntent)
+        }else startBLEService()
     }
 
     private fun createCustomNotification(){
-        val channelId = "music_channel"
+        val channelId = "music"
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(channelId, "MusicPlayer", NotificationManager.IMPORTANCE_HIGH)

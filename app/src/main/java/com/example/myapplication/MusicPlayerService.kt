@@ -39,31 +39,33 @@ class MusicPlayerService: Service() {
         fun setNowPlayingObserver(observer:(Boolean)->Unit){
             nowPlayingObserver = observer
         }
-        fun setCurrentSong(song : Song, initialize :Boolean = false){
+        fun setCurrentSong(song : Song, initialize :Boolean = false):Boolean{
+            val curretTime = System.currentTimeMillis()
+            val n = curretTime - lastRequestTime
+            if(n < 2000) return false
+            lastRequestTime = curretTime
             currentSong = song
             setMediaPlayer(initialize)
+            return true
         }
         private fun setMediaPlayer(initialize :Boolean = false){
-            val curretTime = System.currentTimeMillis()
-            if(curretTime - lastRequestTime < 1000) return
-            lastRequestTime = curretTime
 
             mediaPlayerJob?.cancel()
             mediaPlayer.reset()
             mediaPlayerReady.value = false
 
-            mediaPlayerJob = CoroutineScope(Dispatchers.Default).launch {
-                mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
-                mediaPlayer.prepare()
-                mediaPlayer.setOnPreparedListener {
-                    mediaPlayerReady.value = true
-                    mediaStart()
-                    if (initialize) mediaPause()
-                }
-                mediaPlayer.setOnCompletionListener {
-                    PlayPageViewModel.setSong(1)
-                }
+            mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
+            mediaPlayer.prepare()
+            mediaPlayer.setOnPreparedListener {
+                mediaPlayerReady.value = true
+                mediaStart()
+                if (initialize) mediaPause()
             }
+            mediaPlayer.setOnCompletionListener {
+                PlayPageViewModel.setSong(1)
+            }
+//            mediaPlayerJob = CoroutineScope(Dispatchers.Default).launch {
+//            }
         }
         fun setMediaPosition(newPos:Int, based:Boolean=false){
             if(mediaPlayerReady.value) {

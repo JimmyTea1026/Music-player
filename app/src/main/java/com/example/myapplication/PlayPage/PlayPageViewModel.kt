@@ -39,13 +39,16 @@ object PlayPageViewModel{
         musicBinder.mediaPause()
     }
     fun setSong(nextIdx:Int, setIdx:Boolean=false){
-        var nextSong = if(setIdx) nextIdx else currentSongIndex.value+nextIdx
-        nextSong = if(nextSong >= songList.size) 0 else if(nextSong < 0) songList.size-1 else nextSong
-        if(nextSong != currentSongIndex.value){
-            currentSongIndex.value = nextSong
-            currentSong = songList[currentSongIndex.value]
-            musicBinder.setCurrentSong(currentSong)
-            currentSongObserver.invoke()
+        var nextSongIdx = if(setIdx) nextIdx else currentSongIndex.value+nextIdx
+        nextSongIdx = if(nextSongIdx >= songList.size) 0 //boundary check
+        else if(nextSongIdx < 0) songList.size-1 else nextSongIdx
+        if(nextSongIdx != currentSongIndex.value){
+            val nextSong = songList[nextSongIdx]
+            if(musicBinder.setCurrentSong(nextSong)){
+                currentSongIndex.value = nextSongIdx
+                currentSong = songList[currentSongIndex.value]
+                currentSongObserver.invoke()
+            }
         }
     }
     fun setMediaPosition(newPos: Int, based : Boolean = false) {
