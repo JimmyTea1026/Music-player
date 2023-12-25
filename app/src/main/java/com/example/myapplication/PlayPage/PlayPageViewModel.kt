@@ -20,7 +20,7 @@ object PlayPageViewModel{
         songList = SongRepository.getSongList()
         currentSongIndex.value = 0
         currentSong = songList[currentSongIndex.value]
-        musicBinder.setCurrentSong(currentSong, initialize = true)
+        musicBinder.initMediaPlayer(currentSong)
         return this@PlayPageViewModel
     }
 
@@ -45,9 +45,10 @@ object PlayPageViewModel{
 
         if(nextSongIdx != currentSongIndex.value){
             val nextSong = songList[nextSongIdx]
-            musicBinder.setCurrentSong(nextSong)
-            currentSongIndex.value = nextSongIdx
-            currentSong = songList[currentSongIndex.value]
+            if(musicBinder.setCurrentSong(nextSong)){
+                currentSongIndex.value = nextSongIdx
+                currentSong = songList[currentSongIndex.value]
+            }
         }
     }
     fun readyToChangSong(){

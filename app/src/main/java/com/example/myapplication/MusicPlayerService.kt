@@ -18,7 +18,7 @@ import kotlinx.coroutines.withContext
 
 class MusicPlayerService: Service() {
     private var mediaPlayer = MediaPlayer()
-    private var mediaPlayerReady = mutableStateOf(false)
+    private var mediaPlayerReady = false
     private lateinit var currentSong : Song
 
     override fun onBind(intent: Intent?): IBinder {
@@ -34,22 +34,31 @@ class MusicPlayerService: Service() {
         fun setNowPlayingObserver(observer:(Boolean)->Unit){
             nowPlayingObserver = observer
         }
-        fun setCurrentSong(song : Song, initialize :Boolean = false){
-            setMediaPlayer(song, initialize)
-            currentSong = song
+        fun setCurrentSong(song : Song):Boolean{
+            if(mediaPlayerReady){
+                mediaPlayerReady = false
+                mediaPlayer.stop()
+                mediaPlayer.reset()
+                mediaPlayer.setDataSource(SongRepository.getSongDataSource(song))
+                mediaPlayer.prepare()
+                mediaStart()
+                return true
+            }
+            return false
         }
-        private fun setMediaPlayer(song: Song, initialize :Boolean = false){
-            mediaPlayer.reset()
-            mediaPlayer.setDataSource(SongRepository.getSongDataSource(song))
-            mediaPlayer.prepare()
+        fun initMediaPlayer(song:Song){
             mediaPlayer.setOnPreparedListener {
                 mediaStart()
                 PlayPageViewModel.readyToChangSong()
-                if (initialize) mediaPause()
+                mediaPlayerReady = true
             }
             mediaPlayer.setOnCompletionListener {
                 PlayPageViewModel.setSong(1)
             }
+            mediaPlayer.setDataSource(SongRepository.getSongDataSource(song))
+            mediaPlayer.prepare()
+//            mediaStart()
+//            mediaPause()
         }
         fun setMediaPosition(newPos:Int, based:Boolean=false){
             val new = if(based) getCurrentPosition()+newPos else newPos
@@ -68,10 +77,12 @@ class MusicPlayerService: Service() {
             nowPlayingObserver.invoke(mediaPlayer.isPlaying)
         }
         fun getCurrentPosition():Int{
-            return mediaPlayer.currentPosition/1000
+            return if(mediaPlayerReady) mediaPlayer.currentPosition/1000
+            else 0
         }
         fun getDuration():Int {
-            return mediaPlayer.duration / 1000 + 1
+            return if(mediaPlayerReady) mediaPlayer.duration / 1000 + 1
+            else 1
         }
         fun getIsPlaying():Boolean{
             return mediaPlayer.isPlaying
