@@ -59,9 +59,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+val notification = customizeNotification()
 class MainActivity : ComponentActivity() {
     private lateinit var serviceConnection : ServiceConnection
-    private lateinit var notificationManager : NotificationManager
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -70,11 +70,10 @@ class MainActivity : ComponentActivity() {
                 showNavPage()
                 activateService()
                 startMusicPlayerService()
-                createCustomNotification()
+                notification.createCustomNotification(this)
             }
         }
     }
-
     override fun onDestroy() {
         super.onDestroy()
         unbindService(serviceConnection)
@@ -103,126 +102,6 @@ class MainActivity : ComponentActivity() {
         bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 
     }
-    @Composable
-    private fun showNavPage(){
-        val coroutineScope = rememberCoroutineScope()
-        val switchToMainPage = remember{ mutableStateOf(false) }
-
-        LaunchedEffect(Unit){
-            coroutineScope.launch {
-                delay(1000)
-                switchToMainPage.value = true
-            }
-        }
-        Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 1000),
-            label = "navToMain"
-        )
-        { switchPage ->
-            when(switchPage){
-                true -> mainPage()
-                false -> navPage()
-            }
-        }
-    }
-    @Composable
-    fun mainPage() {
-        val songListViewModel by remember { mutableStateOf(SongListViewModel.initSongList())}
-        val playPageViewModel by remember { mutableStateOf(PlayPageViewModel.initSongList())}
-        val songListView by remember { mutableStateOf(SongListView) }
-        val playPageView by remember { mutableStateOf(PlayPageView) }
-
-        var switchToPlayPage by remember { mutableStateOf(false) }
-        LaunchedEffect(songListViewModel.onChangeSong.value){
-            if(songListViewModel.onChangeSongIndex.value >= 0){
-                playPageViewModel.setSong(songListViewModel.onChangeSongIndex.value, true)
-                switchToPlayPage = true
-            }
-        }
-        LaunchedEffect(playPageViewModel.getCurrentSongIndex().value){
-            updateNotification()
-        }
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ){
-                Crossfade(targetState = switchToPlayPage, animationSpec = tween(durationMillis = 300),
-                    label = ""
-                )
-                { page ->
-                    when(page){
-                        false -> songListView.showPage()
-                        true -> playPageView.showPage()
-                    }
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ){
-                MenuBar(
-                    songListClicked = {switchToPlayPage = false},
-                    playClicked = {
-                        switchToPlayPage = true
-                    }
-                )
-            }
-        }
-    }
-
-    @Composable
-    fun MenuBar(songListClicked: () -> Unit, playClicked: () -> Unit,){
-        Row(
-            modifier = Modifier
-                .height(70.dp)
-                .padding(horizontal = 3.dp, vertical = 10.dp)
-
-        ){
-            Button(
-                onClick = {  songListClicked()  },
-                modifier = Modifier
-                    .weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.DarkGray,
-                    contentColor = Color.White
-                ),
-            ) {
-                Text("Song List")
-            }
-            Button(
-                onClick = { playClicked() },
-                modifier = Modifier
-                    .weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.DarkGray,
-                    contentColor = Color.White
-                ),
-            ) {
-                Text("Now Playing")
-            }
-        }
-    }
-    @Composable
-    fun navPage(){
-        Surface(color = Color.Blue.copy(0.1f)) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                Image(
-                    painter = painterResource(id = R.drawable.spotify),
-                    contentDescription = "Icon",
-                    modifier = Modifier.size(300.dp),
-                )
-            }
-        }
-    }
-
     private val requestMultiplePermissions =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
                 val granted = permissions.entries.all { it.value }
@@ -245,8 +124,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     private fun activateService() {
-        val bluetoothmanager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdapter = bluetoothmanager.adapter
+        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter = bluetoothManager.adapter
         val permissions = arrayOf(
             android.Manifest.permission.BLUETOOTH,
             android.Manifest.permission.BLUETOOTH_ADMIN,
@@ -261,77 +140,124 @@ class MainActivity : ComponentActivity() {
             requestEnableBt.launch(enableBtIntent)
         }else startBLEService()
     }
+}
 
-    private fun createCustomNotification(){
-        val channelId = "music"
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "MusicPlayer", NotificationManager.IMPORTANCE_HIGH)
-            notificationManager.createNotificationChannel(channel)
+@Composable
+private fun showNavPage(){
+    val coroutineScope = rememberCoroutineScope()
+    val switchToMainPage = remember{ mutableStateOf(false) }
+
+    LaunchedEffect(Unit){
+        coroutineScope.launch {
+            delay(1000)
+            switchToMainPage.value = true
         }
     }
-    private fun updateNotification(){
-        val currentSong = PlayPageViewModel.getCurrentSong()
-        val artist = currentSong.getArtist()
-        val title = currentSong.getTitle()
-        var cover = currentSong.getCover()
-        val builder = NotificationCompat.Builder(this, "music")
-        val mediaSession = MediaSessionCompat(this, "tag")
+    Crossfade(targetState = switchToMainPage.value, animationSpec = tween(durationMillis = 1000),
+        label = "navToMain"
+    )
+    { switchPage ->
+        when(switchPage){
+            true -> mainPage()
+            false -> navPage()
+        }
+    }
+}
+@Composable
+fun mainPage() {
+    val songListViewModel by remember { mutableStateOf(SongListViewModel.initSongList())}
+    val playPageViewModel by remember { mutableStateOf(PlayPageViewModel.initSongList())}
+    val songListView by remember { mutableStateOf(SongListView) }
+    val playPageView by remember { mutableStateOf(PlayPageView) }
 
-        val playPauseIntent = Intent(this, NotificationControllerService::class.java).apply { action = "PLAY_PAUSE_ACTION" }
-        val playPausePendingIntent = PendingIntent.getService(this, 0, playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
-        val playPauseAction = NotificationCompat.Action.Builder(
-            R.drawable.small_play,
-            "Play/Pause",
-            playPausePendingIntent
-        ).build()
-        val preSongIntent = Intent(this, NotificationControllerService::class.java).apply { action = "PRE_ACTION" }
-        val preSongPendingIntent = PendingIntent.getService(this, 1, preSongIntent, PendingIntent.FLAG_IMMUTABLE)
-        val preSongAction = NotificationCompat.Action.Builder(
-            R.drawable.pre,
-            "preSong",
-            preSongPendingIntent
-        ).build()
-        val nextSongIntent = Intent(this, NotificationControllerService::class.java).apply { action = "NEXT_ACTION" }
-        val nextSongPendingIntent = PendingIntent.getService(this, 2, nextSongIntent, PendingIntent.FLAG_IMMUTABLE)
-        val nextSongAction = NotificationCompat.Action.Builder(
-            R.drawable.next,
-            "nextSong",
-            nextSongPendingIntent
-        ).build()
-        val plus15SecIntent = Intent(this, NotificationControllerService::class.java).apply { action = "+15_SECOND" }
-        val plus15SecPendingIntent = PendingIntent.getService(this, 3, plus15SecIntent, PendingIntent.FLAG_IMMUTABLE)
-        val plus15SecAction = NotificationCompat.Action.Builder(
-            R.drawable.plus15,
-            "+15",
-            plus15SecPendingIntent
-        ).build()
-        val minus15SecIntent = Intent(this, NotificationControllerService::class.java).apply { action = "-15_SECOND" }
-        val minus15SecPendingIntent = PendingIntent.getService(this, 4, minus15SecIntent, PendingIntent.FLAG_IMMUTABLE)
-        val minus15SecAction = NotificationCompat.Action.Builder(
-            R.drawable.minus15,
-            "-15",
-            minus15SecPendingIntent
-        ).build()
-
-        val notification = builder
-            .setSmallIcon(R.drawable.music)
-            .setContentTitle(title)
-            .setContentText(artist)
-            .setOngoing(true)
-            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-            .setLargeIcon(cover)
-            .setStyle(
-                MediaStyle()
-                    .setShowActionsInCompactView(0,1,2) // 在壓縮視圖中顯示的操作按鈕索引
-                    .setMediaSession(mediaSession.sessionToken)
+    var switchToPlayPage by remember { mutableStateOf(false) }
+    LaunchedEffect(songListViewModel.onChangeSong.value){
+        if(songListViewModel.onChangeSongIndex.value >= 0){
+            playPageViewModel.setSong(songListViewModel.onChangeSongIndex.value, true)
+            switchToPlayPage = true
+        }
+    }
+    LaunchedEffect(playPageViewModel.getCurrentSongIndex().value){
+        notification.updateNotification()
+    }
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(16.dp)
+        ){
+            Crossfade(targetState = switchToPlayPage, animationSpec = tween(durationMillis = 300),
+                label = ""
             )
-            .addAction(minus15SecAction)
-            .addAction(preSongAction)
-            .addAction(playPauseAction)
-            .addAction(nextSongAction)
-            .addAction(plus15SecAction)
+            { page ->
+                when(page){
+                    false -> songListView.showPage()
+                    true -> playPageView.showPage()
+                }
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+        ){
+            MenuBar(
+                songListClicked = {switchToPlayPage = false},
+                playClicked = {
+                    switchToPlayPage = true
+                }
+            )
+        }
+    }
+}
 
-        notificationManager.notify(0, notification.build())
+@Composable
+fun MenuBar(songListClicked: () -> Unit, playClicked: () -> Unit,){
+    Row(
+        modifier = Modifier
+            .height(70.dp)
+            .padding(horizontal = 3.dp, vertical = 10.dp)
+
+    ){
+        Button(
+            onClick = {  songListClicked()  },
+            modifier = Modifier
+                .weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.DarkGray,
+                contentColor = Color.White
+            ),
+        ) {
+            Text("Song List")
+        }
+        Button(
+            onClick = { playClicked() },
+            modifier = Modifier
+                .weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.DarkGray,
+                contentColor = Color.White
+            ),
+        ) {
+            Text("Now Playing")
+        }
+    }
+}
+@Composable
+fun navPage(){
+    Surface(color = Color.Blue.copy(0.1f)) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ){
+            Image(
+                painter = painterResource(id = R.drawable.spotify),
+                contentDescription = "Icon",
+                modifier = Modifier.size(300.dp),
+            )
+        }
     }
 }
