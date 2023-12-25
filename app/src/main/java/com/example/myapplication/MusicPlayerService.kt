@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 class MusicPlayerService: Service() {
     private var mediaPlayer = MediaPlayer()
     private var mediaPlayerReady = false
+    private var initial = true
     private lateinit var currentSong : Song
 
     override fun onBind(intent: Intent?): IBinder {
@@ -47,18 +48,21 @@ class MusicPlayerService: Service() {
             return false
         }
         fun initMediaPlayer(song:Song){
+            mediaPlayer.setDataSource(SongRepository.getSongDataSource(song))
+            mediaPlayer.prepare()
             mediaPlayer.setOnPreparedListener {
                 mediaStart()
                 PlayPageViewModel.readyToChangSong()
                 mediaPlayerReady = true
+                if(initial) {
+                    mediaPause()
+                    initial = false
+                }
             }
             mediaPlayer.setOnCompletionListener {
                 PlayPageViewModel.setSong(1)
             }
-            mediaPlayer.setDataSource(SongRepository.getSongDataSource(song))
-            mediaPlayer.prepare()
-//            mediaStart()
-//            mediaPause()
+
         }
         fun setMediaPosition(newPos:Int, based:Boolean=false){
             val new = if(based) getCurrentPosition()+newPos else newPos

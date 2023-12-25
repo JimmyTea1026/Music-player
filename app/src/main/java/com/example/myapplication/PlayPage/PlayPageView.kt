@@ -258,7 +258,7 @@ object PlayPageView {
             while (true) {
                 curPos = viewModel.getCurrentPosition()
                 duration = viewModel.getDuration()
-                delay(500)
+                delay(1000)
             }
         }
         var isUserChangingSlider by remember{ mutableStateOf(false) }
