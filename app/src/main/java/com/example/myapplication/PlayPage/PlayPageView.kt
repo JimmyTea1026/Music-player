@@ -1,5 +1,6 @@
 package com.example.myapplication.PlayPage
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -58,35 +61,58 @@ object PlayPageView {
     fun showPage(
         modifier: Modifier = Modifier
     ) {
-        // 有空做滑動特效
-        Column(
-            modifier = Modifier
+        if(LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE){
+            Row(modifier = Modifier
                 .fillMaxSize()
                 .padding(12.dp)
-        ){
-            coverImage(
-                Modifier
-                    .padding(top = 20.dp)
-                    .height(400.dp)
-                    .width(500.dp))
-            songInformation(
-                Modifier
-                    .weight(1f)
-                    .fillMaxSize(),
-                fontSize = 26
-            )
-            buttons(
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(top = 10.dp),
-            )
-            progressBar(
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                fontSize = 12
-            )
+            ){
+                coverImage(modifier = Modifier
+                    .size(350.dp)
+                )
+                Box(modifier = Modifier.weight(3f).padding(start = 15.dp)){
+                    Column(modifier = Modifier
+                        .fillMaxSize()) {
+                        songInformation(
+                            modifier = Modifier.weight(1f),
+                            fontSize = 26)
+                        buttons(modifier = Modifier.weight(1f))
+                        progressBar(modifier = Modifier.weight(1f) ,
+                            fontSize = 12)
+                    }
+                }
+
+            }
+        }
+        else{
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp)
+            ){
+                coverImage(
+                    Modifier
+                        .padding(top = 20.dp)
+                        .height(400.dp)
+                        .width(500.dp))
+                songInformation(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxSize(),
+                    fontSize = 26
+                )
+                buttons(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .padding(top = 10.dp),
+                )
+                progressBar(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxSize(),
+                    fontSize = 12
+                )
+            }
         }
     }
     @Composable
