@@ -42,12 +42,14 @@ class WifiManagerService : Service() {
         }
     }
 
-    fun mediaPlayerController(cmd:String){
-        if(cmd == "p") PlayPageViewModel.mediaPlayerStartPause()
-        else if(cmd == "pre") PlayPageViewModel.setSong(-1)
-        else if(cmd == "next") PlayPageViewModel.setSong(1)
-        else if(cmd == "+15") PlayPageViewModel.setMediaPosition(15, true)
-        else if(cmd == "-15") PlayPageViewModel.setMediaPosition(-15, true)
+    private fun mediaPlayerController(cmd:String){
+        when (cmd) {
+            "p" -> PlayPageViewModel.mediaPlayerStartPause()
+            "pre" -> PlayPageViewModel.setSong(-1)
+            "next" -> PlayPageViewModel.setSong(1)
+            "+15" -> PlayPageViewModel.setMediaPosition(15, true)
+            "-15" -> PlayPageViewModel.setMediaPosition(-15, true)
+        }
     }
     override fun onBind(intent: Intent?): IBinder? {
         return null

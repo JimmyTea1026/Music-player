@@ -114,7 +114,7 @@ class BluetoothLeService : Service() {
         ) {
             super.onCharacteristicChanged(gatt, characteristic, value)
             if(characteristic.uuid == characteristicUUID){
-                val cmd = Arrays.toString(value)
+                val cmd = value.contentToString()
                 mediaPlayerController(cmd)
                 Log.i("", cmd)
             }

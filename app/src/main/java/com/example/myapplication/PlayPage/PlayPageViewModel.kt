@@ -42,6 +42,7 @@ object PlayPageViewModel{
         var nextSongIdx = if(setIdx) nextIdx else currentSongIndex.value+nextIdx
         nextSongIdx = if(nextSongIdx >= songList.size) 0 //boundary check
         else if(nextSongIdx < 0) songList.size-1 else nextSongIdx
+
         if(nextSongIdx != currentSongIndex.value){
             val nextSong = songList[nextSongIdx]
             if(musicBinder.setCurrentSong(nextSong)){

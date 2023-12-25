@@ -66,15 +66,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-                /* TODO:
-                    1.通知欄 v
-                    2.Service v
-                    3.Wifi連接 v
-                    4.LBT v
-                    5.切換歌曲動畫 v
-                    6.轉橫向會壞掉
-                    7.LiveDate 替換掉 LaunchedEffect
-                 */
                 SongRepository.initSongList(this.assets)
                 showNavPage()
                 activateService()
@@ -137,8 +128,8 @@ class MainActivity : ComponentActivity() {
     fun mainPage() {
         val songListViewModel by remember { mutableStateOf(SongListViewModel.initSongList())}
         val playPageViewModel by remember { mutableStateOf(PlayPageViewModel.initSongList())}
-        val songListView = SongListView
-        val playPageView = PlayPageView
+        val songListView by remember { mutableStateOf(SongListView) }
+        val playPageView by remember { mutableStateOf(PlayPageView) }
 
         var switchToPlayPage by remember { mutableStateOf(false) }
         LaunchedEffect(songListViewModel.onChangeSong.value){

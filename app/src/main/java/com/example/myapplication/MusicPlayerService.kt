@@ -40,10 +40,10 @@ class MusicPlayerService: Service() {
             nowPlayingObserver = observer
         }
         fun setCurrentSong(song : Song, initialize :Boolean = false):Boolean{
-            val curretTime = System.currentTimeMillis()
-            val n = curretTime - lastRequestTime
-            if(n < 2000) return false
-            lastRequestTime = curretTime
+//            val curretTime = System.currentTimeMillis()
+//            val n = curretTime - lastRequestTime
+//            if(n < 2000) return false
+//            lastRequestTime = curretTime
             currentSong = song
             setMediaPlayer(initialize)
             return true
@@ -55,7 +55,7 @@ class MusicPlayerService: Service() {
             mediaPlayerReady.value = false
 
             mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
-            mediaPlayer.prepare()
+            mediaPlayer.prepareAsync()
             mediaPlayer.setOnPreparedListener {
                 mediaPlayerReady.value = true
                 mediaStart()
@@ -64,8 +64,6 @@ class MusicPlayerService: Service() {
             mediaPlayer.setOnCompletionListener {
                 PlayPageViewModel.setSong(1)
             }
-//            mediaPlayerJob = CoroutineScope(Dispatchers.Default).launch {
-//            }
         }
         fun setMediaPosition(newPos:Int, based:Boolean=false){
             if(mediaPlayerReady.value) {
