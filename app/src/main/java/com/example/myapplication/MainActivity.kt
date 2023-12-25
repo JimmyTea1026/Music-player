@@ -57,26 +57,21 @@ import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
+
 
 val notification = customizeNotification()
 class MainActivity : ComponentActivity() {
-    private lateinit var serviceConnection : ServiceConnection
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
                 SongRepository.initSongList(this.assets)
                 showNavPage()
-                activateService()
-                startMusicPlayerService()
+                startWifiBLEService()
+                startMusicPlayerService(this)
                 notification.createCustomNotification(this)
             }
         }
-    }
-    override fun onDestroy() {
-        super.onDestroy()
-        unbindService(serviceConnection)
     }
     private fun startBLEService(){
         val bleIntent = Intent(this, BluetoothLeService::class.java)
@@ -86,22 +81,7 @@ class MainActivity : ComponentActivity() {
         val wifiIntent = Intent(this, WifiManagerService::class.java)
         startService(wifiIntent)
     }
-    private fun startMusicPlayerService(){
-        val musicIntent = Intent(this, MusicPlayerService::class.java)
-        var musicBinder : MusicPlayerService.MusicBinder? = null
-        serviceConnection = object : ServiceConnection{
-            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                musicBinder = service as MusicPlayerService.MusicBinder
-                PlayPageViewModel.setBinder(musicBinder!!)
-            }
-            override fun onServiceDisconnected(name: ComponentName?) {
-                musicBinder = null
-            }
-        }
 
-        bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-
-    }
     private val requestMultiplePermissions =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
                 val granted = permissions.entries.all { it.value }
@@ -113,7 +93,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-
     private val requestEnableBt =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -123,7 +102,7 @@ class MainActivity : ComponentActivity() {
                 Log.d("Bluetooth", "Bluetooth off")
             }
         }
-    private fun activateService() {
+    private fun startWifiBLEService() {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
         val permissions = arrayOf(
@@ -260,4 +239,18 @@ fun navPage(){
             )
         }
     }
+}
+fun startMusicPlayerService(context: Context){
+    val musicIntent = Intent(context, MusicPlayerService::class.java)
+    var musicBinder : MusicPlayerService.MusicBinder? = null
+    val serviceConnection = object : ServiceConnection{
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            musicBinder = service as MusicPlayerService.MusicBinder
+            PlayPageViewModel.setBinder(musicBinder!!)
+        }
+        override fun onServiceDisconnected(name: ComponentName?) {
+            musicBinder = null
+        }
+    }
+    context.bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 }
