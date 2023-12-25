@@ -14,8 +14,9 @@ object SongRepository {
     fun getSongList():ArrayList<Song>{
         return songList
     }
-    fun initSongList(assetManager: AssetManager){
-        this.assetManager = assetManager
+    @Composable
+    fun initSongList(){
+        this.assetManager = LocalContext.current.assets
         val path = "music"
         val assetList = assetManager.list(path)
         if (assetList != null) {

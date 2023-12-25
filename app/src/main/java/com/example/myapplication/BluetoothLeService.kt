@@ -80,7 +80,7 @@ class BluetoothLeService : Service() {
         val device = bluetoothAdapter?.getRemoteDevice(address)
         device?.let {
             bluetoothGatt = device.connectGatt(this, false, gattCallback)
-            Log.i("BLE", "Jimmyble connect successd")
+            Log.i("BLE", "JimmyBLE connect success")
         }
     }
 
@@ -130,8 +130,10 @@ class BluetoothLeService : Service() {
     }
 
     private fun mediaPlayerController(cmd : String){
-        if(cmd == "[80]") PlayPageViewModel.mediaPlayerStartPause()
-        else if(cmd == "[68]") PlayPageViewModel.setSong(1)
-        else if(cmd == "[85]")PlayPageViewModel.setSong(-1)
+        when (cmd) {
+            "[80]" -> PlayPageViewModel.mediaPlayerStartPause()
+            "[68]" -> PlayPageViewModel.setSong(1)
+            "[85]" -> PlayPageViewModel.setSong(-1)
+        }
     }
 }

@@ -47,8 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationCompat
-import androidx.media.app.NotificationCompat.MediaStyle
 import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.PlayPage.PlayPageView
 import com.example.myapplication.PlayPage.PlayPageViewModel
@@ -61,17 +59,37 @@ import kotlinx.coroutines.launch
 
 val notification = customizeNotification()
 class MainActivity : ComponentActivity() {
+    private lateinit var serviceConnection : ServiceConnection
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-                SongRepository.initSongList(this.assets)
                 showNavPage()
                 startWifiBLEService()
-                startMusicPlayerService(this)
+                startMusicPlayerService()
                 notification.createCustomNotification(this)
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unbindService(serviceConnection)
+    }
+
+    private fun startMusicPlayerService(){
+        val musicIntent = Intent(this, MusicPlayerService::class.java)
+        var musicBinder : MusicPlayerService.MusicBinder? = null
+        serviceConnection = object : ServiceConnection{
+            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                musicBinder = service as MusicPlayerService.MusicBinder
+                PlayPageViewModel.setBinder(musicBinder!!)
+            }
+            override fun onServiceDisconnected(name: ComponentName?) {
+                musicBinder = null
+            }
+        }
+        bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
     private fun startBLEService(){
         val bleIntent = Intent(this, BluetoothLeService::class.java)
@@ -144,6 +162,7 @@ private fun showNavPage(){
 }
 @Composable
 fun mainPage() {
+    SongRepository.initSongList()
     val songListViewModel by remember { mutableStateOf(SongListViewModel.initSongList())}
     val playPageViewModel by remember { mutableStateOf(PlayPageViewModel.initSongList())}
     val songListView by remember { mutableStateOf(SongListView) }
@@ -159,6 +178,7 @@ fun mainPage() {
     LaunchedEffect(playPageViewModel.getCurrentSongIndex().value){
         notification.updateNotification()
     }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -239,18 +259,4 @@ fun navPage(){
             )
         }
     }
-}
-fun startMusicPlayerService(context: Context){
-    val musicIntent = Intent(context, MusicPlayerService::class.java)
-    var musicBinder : MusicPlayerService.MusicBinder? = null
-    val serviceConnection = object : ServiceConnection{
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            musicBinder = service as MusicPlayerService.MusicBinder
-            PlayPageViewModel.setBinder(musicBinder!!)
-        }
-        override fun onServiceDisconnected(name: ComponentName?) {
-            musicBinder = null
-        }
-    }
-    context.bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 }

@@ -31,34 +31,20 @@ class MusicPlayerService: Service() {
     }
     inner class MusicBinder : Binder(){
         private lateinit var nowPlayingObserver : ((Boolean)->Unit)
-        private var mediaPlayerJob: Job? = null
-        private var lastRequestTime: Long = 0
-        fun getService(): MusicPlayerService {
-            return this@MusicPlayerService
-        }
         fun setNowPlayingObserver(observer:(Boolean)->Unit){
             nowPlayingObserver = observer
         }
-        fun setCurrentSong(song : Song, initialize :Boolean = false):Boolean{
-//            val curretTime = System.currentTimeMillis()
-//            val n = curretTime - lastRequestTime
-//            if(n < 2000) return false
-//            lastRequestTime = curretTime
+        fun setCurrentSong(song : Song, initialize :Boolean = false){
+            setMediaPlayer(song, initialize)
             currentSong = song
-            setMediaPlayer(initialize)
-            return true
         }
-        private fun setMediaPlayer(initialize :Boolean = false){
-
-            mediaPlayerJob?.cancel()
+        private fun setMediaPlayer(song: Song, initialize :Boolean = false){
             mediaPlayer.reset()
-            mediaPlayerReady.value = false
-
-            mediaPlayer.setDataSource(SongRepository.getSongDataSource(currentSong))
-            mediaPlayer.prepareAsync()
+            mediaPlayer.setDataSource(SongRepository.getSongDataSource(song))
+            mediaPlayer.prepare()
             mediaPlayer.setOnPreparedListener {
-                mediaPlayerReady.value = true
                 mediaStart()
+                PlayPageViewModel.readyToChangSong()
                 if (initialize) mediaPause()
             }
             mediaPlayer.setOnCompletionListener {
@@ -66,14 +52,12 @@ class MusicPlayerService: Service() {
             }
         }
         fun setMediaPosition(newPos:Int, based:Boolean=false){
-            if(mediaPlayerReady.value) {
-                val new = if(based) getCurrentPosition()+newPos else newPos
-                val duration = getDuration()
+            val new = if(based) getCurrentPosition()+newPos else newPos
+            val duration = getDuration()
 
-                if(new <= 0) mediaPlayer.seekTo(0)
-                else if(new >= duration) mediaPlayer.seekTo(duration *1000)
-                else mediaPlayer.seekTo(new*1000)
-            }
+            if(new <= 0) mediaPlayer.seekTo(0)
+            else if(new >= duration) mediaPlayer.seekTo(duration *1000)
+            else mediaPlayer.seekTo(new*1000)
         }
         fun mediaStart(){
             mediaPlayer.start()
@@ -84,12 +68,10 @@ class MusicPlayerService: Service() {
             nowPlayingObserver.invoke(mediaPlayer.isPlaying)
         }
         fun getCurrentPosition():Int{
-            if(mediaPlayerReady.value) return mediaPlayer.currentPosition/1000
-            else return 0
+            return mediaPlayer.currentPosition/1000
         }
-        fun getDuration():Int{
-            if(mediaPlayerReady.value) return mediaPlayer.duration/1000
-            else return 1
+        fun getDuration():Int {
+            return mediaPlayer.duration / 1000 + 1
         }
         fun getIsPlaying():Boolean{
             return mediaPlayer.isPlaying

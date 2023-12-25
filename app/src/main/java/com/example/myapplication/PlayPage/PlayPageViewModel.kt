@@ -45,12 +45,13 @@ object PlayPageViewModel{
 
         if(nextSongIdx != currentSongIndex.value){
             val nextSong = songList[nextSongIdx]
-            if(musicBinder.setCurrentSong(nextSong)){
-                currentSongIndex.value = nextSongIdx
-                currentSong = songList[currentSongIndex.value]
-                currentSongObserver.invoke()
-            }
+            musicBinder.setCurrentSong(nextSong)
+            currentSongIndex.value = nextSongIdx
+            currentSong = songList[currentSongIndex.value]
         }
+    }
+    fun readyToChangSong(){
+        currentSongObserver.invoke()
     }
     fun setMediaPosition(newPos: Int, based : Boolean = false) {
         musicBinder.setMediaPosition(newPos, based)
