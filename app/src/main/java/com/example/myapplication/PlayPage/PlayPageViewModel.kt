@@ -4,7 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.example.myapplication.Model.Song
 import com.example.myapplication.Model.SongRepository
-import com.example.myapplication.MusicPlayerService
+import com.example.myapplication.Service.MusicPlayerService
 
 object PlayPageViewModel{
     private var currentSongIndex = mutableStateOf(-1)

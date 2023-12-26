@@ -16,6 +16,7 @@ object SongRepository {
     }
     @Composable
     fun initSongList(){
+        songList.clear()
         this.assetManager = LocalContext.current.assets
         val path = "music"
         val assetList = assetManager.list(path)

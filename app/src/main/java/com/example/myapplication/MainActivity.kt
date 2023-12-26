@@ -1,21 +1,14 @@
 package com.example.myapplication
 
 import android.app.Activity
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.graphics.Bitmap
-import android.graphics.Matrix
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -50,6 +43,9 @@ import androidx.compose.ui.unit.dp
 import com.example.myapplication.Model.SongRepository
 import com.example.myapplication.PlayPage.PlayPageView
 import com.example.myapplication.PlayPage.PlayPageViewModel
+import com.example.myapplication.Service.BluetoothLeService
+import com.example.myapplication.Service.MusicPlayerService
+import com.example.myapplication.Service.WifiManagerService
 import com.example.myapplication.SongList.SongListView
 import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
@@ -64,7 +60,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-                showNavPage()
+                pageManage()
                 startWifiBLEService()
                 startMusicPlayerService()
                 notification.createCustomNotification(this)
@@ -100,8 +96,7 @@ class MainActivity : ComponentActivity() {
         startService(wifiIntent)
     }
 
-    private val requestMultiplePermissions =
-            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+    private val requestMultiplePermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
                 val granted = permissions.entries.all { it.value }
                 if (granted) {
                     Log.d("Permission", "Get all permission")
@@ -111,8 +106,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-    private val requestEnableBt =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    private val requestEnableBt = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 Log.d("Bluetooth", "Bluetooth ON")
                 startBLEService()
@@ -140,7 +134,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun showNavPage(){
+fun pageManage(){
     val coroutineScope = rememberCoroutineScope()
     val switchToMainPage = remember{ mutableStateOf(false) }
 

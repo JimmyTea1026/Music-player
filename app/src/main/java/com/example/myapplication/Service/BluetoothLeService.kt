@@ -1,25 +1,16 @@
-package com.example.myapplication
+package com.example.myapplication.Service
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Service
 import android.bluetooth.*
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.startActivityForResult
-import androidx.core.content.ContextCompat
 import com.example.myapplication.PlayPage.PlayPageViewModel
-import java.util.Arrays
 import java.util.UUID
 
 class BluetoothLeService : Service() {

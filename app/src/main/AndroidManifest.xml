@@ -38,19 +38,19 @@
 
         </activity>
         <service
-            android:name=".BluetoothLeService"
+            android:name=".Service.BluetoothLeService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".WifiManagerService"
+            android:name=".Service.WifiManagerService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".MusicPlayerService"
+            android:name=".Service.MusicPlayerService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".NotificationControllerService"
+            android:name=".Service.NotificationControllerService"
             android:enabled="true"
             android:exported="false" />
 

@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.Service
 
 import android.app.Service
 import android.content.Intent
@@ -62,7 +62,6 @@ class MusicPlayerService: Service() {
             mediaPlayer.setOnCompletionListener {
                 PlayPageViewModel.setSong(1)
             }
-
         }
         fun setMediaPosition(newPos:Int, based:Boolean=false){
             val new = if(based) getCurrentPosition()+newPos else newPos
