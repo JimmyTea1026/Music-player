@@ -29,7 +29,7 @@ object PlayPageViewModel{
     }
 
     fun mediaPlayerStartPause(){
-        if(musicBinder.getIsPlaying()) mediaPlayerPause()
+        if(nowPlaying.value) mediaPlayerPause()
         else mediaPlayerStart()
     }
     fun mediaPlayerStart(){

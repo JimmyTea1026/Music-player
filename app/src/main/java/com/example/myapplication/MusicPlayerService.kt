@@ -88,9 +88,6 @@ class MusicPlayerService: Service() {
             return if(mediaPlayerReady) mediaPlayer.duration / 1000 + 1
             else 1
         }
-        fun getIsPlaying():Boolean{
-            return mediaPlayer.isPlaying
-        }
     }
 
 }

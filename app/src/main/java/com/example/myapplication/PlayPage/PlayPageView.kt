@@ -252,8 +252,32 @@ object PlayPageView {
         modifier : Modifier = Modifier,
         fontSize: Int
     ){
+        var isUserChangingSlider by remember{ mutableStateOf(false) }
+        var sliderValue by remember{ mutableStateOf(0f) }
+        var playingWhenChange by remember{ mutableStateOf(false) }
         var duration by remember { mutableStateOf(1) }
         var curPos by remember { mutableStateOf(0) }
+        fun onSliderValueChange(newValue: Float) {
+            val newPos = (newValue * duration).toInt()
+            curPos = newPos
+            if(viewModel.getNowPlaying().value) playingWhenChange = true
+            viewModel.mediaPlayerPause()
+        }
+
+        fun onSliderValueChangeFinished() {
+            val newPos = (sliderValue * duration).toInt()
+            viewModel.setMediaPosition(newPos)
+            if (playingWhenChange) viewModel.mediaPlayerStart()
+            playingWhenChange = false
+        }
+        fun formatTime(time: Int): String {
+            val minutes = time / 60
+            val seconds = time % 60
+            val strMinutes = if (minutes < 10) "0$minutes" else "$minutes"
+            val strSeconds = if (seconds < 10) "0$seconds" else "$seconds"
+            return "$strMinutes : $strSeconds"
+        }
+
         LaunchedEffect(viewModel.getNowPlaying().value) {
             while (true) {
                 curPos = viewModel.getCurrentPosition()
@@ -261,36 +285,24 @@ object PlayPageView {
                 delay(1000)
             }
         }
-        var isUserChangingSlider by remember{ mutableStateOf(false) }
-        var sliderValue by remember{ mutableStateOf(0f) }
-        var playingWhenChange by remember{ mutableStateOf(false) }
-
         Box(modifier = modifier){
             Column() {
+                val currentValue = if (isUserChangingSlider) sliderValue else curPos.toFloat() / duration.toFloat()
                 Slider(
-                    value = if (isUserChangingSlider) sliderValue else curPos.toFloat() / duration.toFloat(),
-                    onValueChange = {newValue ->
-                        curPos = (newValue*duration).toInt()
-                        sliderValue = newValue
-                        if(viewModel.getNowPlaying().value) playingWhenChange = true
+                    value = currentValue,
+                    onValueChange = { newValue ->
                         isUserChangingSlider = true
-                        viewModel.mediaPlayerPause()
+                        sliderValue = newValue
+                        onSliderValueChange(newValue)
                     },
                     onValueChangeFinished = {
-                        val newPos = (sliderValue*duration).toInt()
-                        viewModel.setMediaPosition(newPos)
-                        if(playingWhenChange) viewModel.mediaPlayerStart()
                         isUserChangingSlider = false
-                        playingWhenChange = false
+                        onSliderValueChangeFinished()
                     }
                 )
                 Row(){
-                    val curMinute : Int = curPos/60
-                    val curSecond : Int = curPos%60
-                    val curStrMin : String = "0$curMinute"
-                    val curStrSec : String = if(curSecond>=10) "$curSecond" else "0$curSecond"
                     Text(
-                        text = "$curStrMin : $curStrSec",
+                        text = formatTime(curPos),
                         style = TextStyle(fontSize = fontSize.sp),
                         textAlign = TextAlign.Start,
                         modifier = Modifier
@@ -298,13 +310,8 @@ object PlayPageView {
                             .weight(1f)
                             .padding(end = 15.dp)
                     )
-
-                    val minute : Int = duration/60
-                    val second : Int = duration%60
-                    val strMin : String = "0$minute"
-                    val strSec : String = if(second>=10) "$second" else "0$second"
                     Text(
-                        text = "$strMin : $strSec",
+                        text = formatTime(duration),
                         style = TextStyle(fontSize = fontSize.sp),
                         textAlign = TextAlign.End,
                         modifier = Modifier
@@ -315,5 +322,6 @@ object PlayPageView {
                 }
             }
         }
+
     }
 }
