@@ -51,9 +51,6 @@ import com.example.myapplication.SongList.SongListViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-
-val notification = customizeNotification()
 class MainActivity : ComponentActivity() {
     private lateinit var serviceConnection : ServiceConnection
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,7 +60,6 @@ class MainActivity : ComponentActivity() {
                 pageManage()
                 startWifiBLEService()
                 startMusicPlayerService()
-                notification.createCustomNotification(this)
             }
         }
     }
@@ -161,6 +157,8 @@ fun mainPage() {
     val playPageViewModel by remember { mutableStateOf(PlayPageViewModel.initSongList())}
     val songListView by remember { mutableStateOf(SongListView) }
     val playPageView by remember { mutableStateOf(PlayPageView) }
+    val notification by remember { mutableStateOf(customizeNotification())}
+    notification.createCustomNotification()
 
     var switchToPlayPage by remember { mutableStateOf(false) }
     LaunchedEffect(songListViewModel.onChangeSong.value){
